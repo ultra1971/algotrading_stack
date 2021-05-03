@@ -42,6 +42,7 @@ La instalación es muy sencilla, veamos...
 ### Gestión de los contenedores 🔩
 
 Para ver el status y administrar los contenedores puedes usar el comando docker-compose o tambien la interfaz web provista por Portainer:
+
     * Portainer:        http://localhost:9000
 
 La primera vez que ingreses te va a solicitar crear una password para la cuenta admin.
@@ -60,7 +61,8 @@ Los diferentes servicios del stack se pueden acceder a traves:
 
 ## Paquetes y librerias 📦
 
-En los archivos requirements.txt encontraras las librerias que se han incluido, he incluido entre otras;
+En los archivos requirements.txt encontraras las librerias que se han incluido, he incluido entre otras:
+
     * psycopg2-binary
     * mlflow
     * sklearn
