@@ -1,0 +1,262 @@
+version: '3'
+
+x-airflow-common:
+    &airflow-common
+    build:
+        context: ./dockerfile_airflow
+    environment:
+        &airflow-common-env
+        AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+        AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@pg-airflow/airflow
+        AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@pg-airflow/airflow
+        AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+        AIRFLOW__CORE__FERNET_KEY: ''
+        AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+        AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+        TZ: ${TZ}
+    volumes:
+        - ${WD}/airflow/dags:/opt/airflow/dags
+        - ${WD}/airflow/logs:/opt/airflow/logs
+        - ${WD}/airflow/plugins:/opt/airflow/plugins
+        - ${ND}:/home/airflow/notebooks
+    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+    depends_on:
+        redis:
+            condition: service_healthy
+        pg-airflow:
+            condition: service_healthy
+
+services:
+
+    portainer:
+        container_name: "portainer"
+        image: portainer/portainer-ce
+        command: -H unix:///var/run/docker.sock
+        restart: always
+        ports:
+            - 9000:9000
+            - 8000:8000
+        environment:
+            TZ: ${TZ}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - portainer-volume:/data
+
+    redis:
+        image: redis
+        container_name: "redis"
+        volumes:
+            - redis-volume:/data
+        ports:
+            - 6379:6379
+        environment:
+            TZ: ${TZ}
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 30s
+            retries: 50
+        restart: always
+
+
+    pg-airflow:
+        image: postgres
+        container_name: "pg-airflow"
+        environment:
+            POSTGRES_USER: airflow
+            POSTGRES_PASSWORD: airflow
+            POSTGRES_DB: airflow
+            TZ: ${TZ}
+        ports:
+            - 5432:5432
+        volumes:
+            - pg-airflow-volume:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "airflow"]
+            interval: 5s
+            retries: 5
+        restart: always
+ 
+    pg-master:
+        image: postgres:13
+        restart: always
+        container_name: "pg-master"
+        ports:
+            - 5431:5431            
+        environment:
+            SHARED_PASSWORD: password
+            POSTGRES_PASSWORD: posgres349
+            TZ: ${TZ}
+        volumes:
+            - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/ 
+            - pg-master-volume:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD", "pg_isready", "-U", "postgres"]
+          interval: 5s
+          retries: 5
+        restart: always
+
+    pgadmin:
+        image: dpage/pgadmin4
+        container_name: "pg-admin"
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "guest@guest.com"
+            PGADMIN_DEFAULT_PASSWORD: "guest"
+            TZ: ${TZ}
+        volumes:
+            - ${WD}/pgadmin/:/var/lib/pgadmin 
+        ports:
+            - 1234:80
+        depends_on:
+            - reverseproxy
+        depends_on:
+            - pg-master
+       
+    airflow-scheduler:
+        <<: *airflow-common
+        container_name: "airflow-scheduler"
+        command: scheduler
+        restart: always
+
+    airflow-worker:
+        <<: *airflow-common
+        container_name: "airflow-worker"
+        command: celery worker
+        restart: always
+
+    airflow-webserver:
+        <<: *airflow-common
+        container_name: "airflow-webserver"
+        command: webserver
+        ports:
+            - 8080:8080
+        depends_on:
+            - reverseproxy
+            - redis
+            - airflow-worker
+            - airflow-scheduler
+            - pg-airflow
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+            interval: 10s
+            timeout: 10s
+            retries: 5
+        restart: always
+
+    airflow-flower:
+        <<: *airflow-common
+        container_name: "airflow-flower"
+        command: celery flower
+        ports:
+            - 5555:5555
+        healthcheck:
+          test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+          interval: 10s
+          timeout: 10s
+          retries: 5
+        restart: always
+
+    airflow-init:
+        <<: *airflow-common
+        container_name: "airflow-init"
+        command: version
+        environment:
+            <<: *airflow-common-env
+            _AIRFLOW_DB_UPGRADE: 'true'
+            _AIRFLOW_WWW_USER_CREATE: 'true'
+            _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+            _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+    mlflow:
+        container_name: "mlflow"
+        build:
+            context: ./dockerfile_mlflowserver
+        working_dir: "/mlflow-image"
+        volumes:
+            - ${WD}/mlflow:/mlflow-image
+        ports:
+            - "5500:5500"
+        environment:
+            TZ: ${TZ}
+        command: mlflow server --host 0.0.0.0 --port 5500 --backend-store-uri /mlflow-image/mlruns
+        depends_on:
+            - reverseproxy
+
+    jupyter:
+        container_name: "jupyter"
+        build:
+            context: ./dockerfile_jupyter_notebook
+        volumes:
+            - ${ND}:/home/jovyan/notebooks
+            - ${WD}/mlflow:/mlflow-image
+        environment: 
+            MLFLOW_TRACKING_URI: http://mlflow-image
+            TZ: ${TZ}   
+        ports:    
+            - "8888:8888"
+        depends_on:
+            - reverseproxy
+
+    superset:
+        container_name: "superset"
+        build:
+            context: ./dockerfile_superset
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            MAPBOX_API_KEY: ${MAPBOX_API_KEY}
+            SUPERSET_HOME: /etc/superset
+            SUPERSET_ENV: production
+            TZ: ${TZ}
+        ports:
+            - "8088:8088"
+        depends_on:
+            - reverseproxy
+        volumes:
+            - ${WD}/superset/:/etc/superset
+            - ${WD}/superset/:/var/lib/superset   
+        depends_on:
+            - pg-master
+
+    reverseproxy:
+        container_name: "reverseproxy"
+        build:
+            context: ./dockerfile_reverseproxy
+        ports:
+            - 80:80
+        environment:
+            TZ: ${TZ}
+        volumes:
+            - ${ND}:/etc/nginx/html/
+        restart: always
+
+    ib-gateway:
+        container_name: "ib-gateway"
+        image: mgvazquez/ibgateway:latest
+        restart: always
+        ports:
+            - "192.168.1.10:7497:7497"
+            - "4001:4001"
+            - "5999:5999"
+        environment:
+            TZ: ${TZ}
+            VNC_PASSWORD: ib
+            VNC_PORT: 5999
+            TWSUSERID: ${TWSUSERID}
+            TWSPASSWORD: ${TWSPASSWORD}
+            TRADING_MODE: ${TRADING_MODE}
+    
+volumes:
+    redis-volume:
+        external: false
+        name: redis-volume
+    pg-master-volume:
+        external: false
+        name: pg-master-volume
+    pg-airflow-volume:
+        external: false
+        name: pg-airflow-volume
+    portainer-volume:
+        external: false
+        name: portainer-volume

@@ -1,0 +1,8 @@
+psycopg2-binary
+mlflow==1.4.0
+sklearn
+xgboost
+xlrd
+ffn
+
+

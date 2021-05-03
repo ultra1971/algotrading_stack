@@ -1,0 +1,17 @@
+psycopg2-binary
+mlflow==1.4.0
+sklearn
+xgboost
+IBPy2
+backtrader
+bs4
+peewee
+adjustText
+xlrd
+ffn
+pyfolio
+quantstats
+riskfolio-lib
+
+
+
