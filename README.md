@@ -1,15 +1,14 @@
-# Título del Proyecto
+# Algotrading Stack
 
-Algotrading Stack
 
 ## Comenzando 🚀
 
-Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para
+Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading
 
 
 ### Pre-requisitos 📋
 
-Solo tienes que tenes instalado docker en un maquina (linux, obvio)
+Solo tienes que tenes instalado docker en una maquina (linux, obvio)
 
 Aqui encontraras una guia para instalar docker en Ubuntu 20.04
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-es
