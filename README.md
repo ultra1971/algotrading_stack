@@ -25,10 +25,13 @@ La instalación es muy sencilla, veamos...
 2) Edita las variables del archivo .env, ya que se uilizan en el archivo docker-compose.yaml para configurar los servicios de los contenedores
 
     WD="directorio de trabajo, donde reside esta misma carpeta, en el ejemplo seria la ruta completa de 'algotrading'"
+    
     ND="directorio donde se alojaron los notebooks y demas archivos python que seran accesibles desde los contenedores"
 
-    TWSUSERID="usuario del gateway de Interactive broker" 
-    TWSPASSWORD="password del gateway de Interactive broker" 
+    TWSUSERID="usuario del gateway de Interactive broker"
+    
+    TWSPASSWORD="password del gateway de Interactive broker"
+    
     TRADING_MODE="modalidad del gateway de Interactive broker paper o live"
 
     TZ="timezone del container"
@@ -38,7 +41,7 @@ La instalación es muy sencilla, veamos...
 
 ### Gestión de los contenedores 🔩
 
-Para ver el status y administrar los contenedores puedes usar el comando docker-compose o tambien la interfaz web provista por Portainer 
+Para ver el status y administrar los contenedores puedes usar el comando docker-compose o tambien la interfaz web provista por Portainer:
     * Portainer:        http://localhost:9000
 
 La primera vez que ingreses te va a solicitar crear una password para la cuenta admin.
