@@ -69,7 +69,7 @@ En los archivos requirements.txt encontraras las librerias que se han incluido, 
     * xgboost
     * IBPy2
     * ib_insync
-    * backtrader
+    * backtrader2 (fork de backtrader con bugfixes)
     * bs4
     * peewee
     * xlrd
