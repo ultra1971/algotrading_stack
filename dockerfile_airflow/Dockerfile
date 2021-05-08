@@ -16,6 +16,7 @@ RUN pip3 install --requirement /tmp/requirements.txt
 
 ENV PYTHONPATH "${PYTHONPATH}:/usr/local/airflow/dags"
 
-#COPY locator.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/plot/locator.py
+COPY locator.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/plot/locator.py
+COPY plot.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/plot/plot.py
 
 
