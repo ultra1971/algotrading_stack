@@ -3,7 +3,8 @@ mlflow==1.4.0
 sklearn
 xgboost
 IBPy2
-backtrader
+backtrader2
+ib_insync
 bs4
 peewee
 adjustText

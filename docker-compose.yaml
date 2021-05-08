@@ -38,6 +38,11 @@ services:
             - 8000:8000
         environment:
             TZ: ${TZ}
+        #healthcheck:
+        #    test: ["CMD", "curl", "--fail", "http://localhost:9000/api/status"]
+        #    interval: 60s
+        #    timeout: 5s
+        #    retries: 3
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - portainer-volume:/data
@@ -174,6 +179,11 @@ services:
         working_dir: "/mlflow-image"
         volumes:
             - ${WD}/mlflow:/mlflow-image
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:5500"]
+            interval: 60s
+            timeout: 5s
+            retries: 3
         ports:
             - "5500:5500"
         environment:
@@ -189,6 +199,11 @@ services:
         volumes:
             - ${ND}:/home/jovyan/notebooks
             - ${WD}/mlflow:/mlflow-image
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:8888"]
+            interval: 60s
+            timeout: 5s
+            retries: 3
         environment: 
             MLFLOW_TRACKING_URI: http://mlflow-image
             TZ: ${TZ}   
@@ -225,6 +240,11 @@ services:
             context: ./dockerfile_reverseproxy
         ports:
             - 80:80
+        healthcheck:
+            test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/health"]
+            interval: 60s
+            timeout: 5s
+            retries: 3
         environment:
             TZ: ${TZ}
         volumes:

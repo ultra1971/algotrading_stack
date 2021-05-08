@@ -4,7 +4,7 @@ sklearn
 xgboost
 IBPy2
 ib_insync
-backtrader
+backtrader2
 bs4
 peewee
 adjustText
@@ -13,3 +13,5 @@ ffn
 pyfolio
 quantstats
 riskfolio-lib
+
+
