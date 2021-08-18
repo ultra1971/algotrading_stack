@@ -8,12 +8,15 @@ Uno de las actividades recurrentes es armar un maquina que disponga de todos los
 
 ### Pre-requisitos 📋
 
-Solo tienes que tenes instalado docker en una maquina (linux, obvio)
+Solo tienes que tenes instalado docker en una maquina.
 
 Aqui encontraras una guia para instalar docker en Ubuntu 20.04
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-es
 
-Toda la instalaci[on esta armado con un stack de docker, que principalmente utiliza el comando docker-compose
+Si insistes con Windows, quizas esta guia te pueda ayudar
+https://www.simplilearn.com/tutorials/docker-tutorial/install-docker-on-windows
+
+Luego toda la instalaci[on esta armada con un stack completo e integrado de docker, que utiliza partir de utilizar comando docker-compose arma todo el stack de microservicios
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-es
 
 ### Instalación 🔧
@@ -45,7 +48,7 @@ Para ver el status y administrar los contenedores puedes usar el comando docker-
 
     * Portainer:        http://localhost:9000
 
-La primera vez que ingreses te va a solicitar crear una password para la cuenta admin.
+La primera vez que ingreses te va a solicitar crear una password para la cuenta admin, y luego tendras acceso a la gestión y administracion de los contenedores, acceder a las consolas de los mismos, monitoreas recursos y status de los servicios.
 
 ### Servicios incluidos ⌨️
 
