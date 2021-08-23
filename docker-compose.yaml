@@ -197,7 +197,7 @@ services:
         build:
             context: ./dockerfile_jupyter_notebook
         volumes:
-            - ${ND}:/home/jovyan/notebooks
+            - ${ND}:/home/airflow/notebooks
             - ${WD}/mlflow:/mlflow-image
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:8888"]
@@ -205,6 +205,11 @@ services:
             timeout: 5s
             retries: 3
         environment: 
+            NB_USER: airflow
+            NB_UID: 1010
+            NB_GID: 1020
+            CHOWN_HOME: 'yes'
+            CHOWN_HOME_OPTS: -R
             MLFLOW_TRACKING_URI: http://mlflow-image
             TZ: ${TZ}   
         ports:    
