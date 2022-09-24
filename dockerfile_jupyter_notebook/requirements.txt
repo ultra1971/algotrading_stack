@@ -27,8 +27,8 @@ adjustText==0.7.3
 ffn==0.3.4
 pyfolio
 quantstats
-#riskfolio-lib
-Riskfolio_Lib==0.1.4
+riskfolio-lib
+#riskfolio-lib==0.1.5.1
 black_box==1.0.2
 statsmodels==0.12.1
 shap==0.39.0
@@ -46,12 +46,13 @@ pytz==2021.1
 tabulate==0.8.7
 joblib==1.0.0
 #airflow==0.6
-ccxt==1.55.5
+ccxt==1.55.9
 fracdiff==0.5.1
 ibapi==9.81.1.post1
 PyYAML==5.4.1
 #Twisted==21.7.0
 #v20==3.0.25.0
+xverse
 
 
 

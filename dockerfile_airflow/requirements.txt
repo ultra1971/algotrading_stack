@@ -1,6 +1,7 @@
-numpy==1.20.3
-TA_Lib==0.4.20
+numpy==1.22.4
+TA_Lib==0.4.24
 pandas==1.2.5
+numba==0.53.1
 #seaborn==0.11.1
 #ipython==7.26.0
 tables
@@ -14,6 +15,7 @@ scikit-learn
 lightgbm
 #lightgbm==3.2.1
 xgboost
+fastai
 
 IBPy2
 ib_insync
@@ -34,8 +36,8 @@ ffn
 #ffn==0.3.4
 pyfolio
 quantstats
-riskfolio-lib
-#Riskfolio_Lib==0.1.4
+#riskfolio-lib==0.1.5.1
+riskfolio_lib
 #black_box==1.0.2
 black_box
 #statsmodels==0.12.1
@@ -63,10 +65,13 @@ pytz
 tabulate
 #joblib==1.0.0
 joblib
-#airflow==0.6
 #fracdiff==0.5.1
 fracdiff
 #PyYAML==5.4.1
 pyyamL
 #Twisted==21.7.0
-
+lxml
+cssselect
+xverse
+pykalman
+vectorbt
