@@ -3,7 +3,7 @@
 
 ## Comenzando 🚀
 
-Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading
+Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading, el objetivo de este proyecto es proveer toda la infraestructura necesaria sin necesidad de instalar software o componentes locales sino a traves de un entorno virtualizado con la tecnologia provista por docker.
 
 
 ### Pre-requisitos 📋
