@@ -3,7 +3,7 @@ mkdir ./airflow
 mkdir ./airflow/dags
 mkdir ./airflow/logs
 mkdir ./airflow/plugins
-mkdir ./mlflow-image
+mkdir ./mlflow
 mkdir ./notebooks
 mkdir ./pgadmin
 mkdir ./postgress_db
@@ -24,4 +24,5 @@ docker exec -it superset superset fab create-admin \
                --password admin
 docker exec -it superset superset db upgrade
 docker exec -it superset superset init
+docker exec -it superset superset load_examples
 

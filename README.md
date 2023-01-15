@@ -3,20 +3,17 @@
 
 ## Comenzando 🚀
 
-Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading, el objetivo de este proyecto es proveer toda la infraestructura necesaria sin necesidad de instalar software o componentes locales sino a traves de un entorno contenerizado y virtualizado con la tecnologia provista por docker.
+Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading
 
 
 ### Pre-requisitos 📋
 
-Solo tienes que tenes instalado docker en una maquina.
+Solo tienes que tenes instalado docker en una maquina (linux, obvio)
 
 Aqui encontraras una guia para instalar docker en Ubuntu 20.04
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-es
 
-Si insistes con Windows, quizas esta guia te pueda ayudar
-https://www.simplilearn.com/tutorials/docker-tutorial/install-docker-on-windows
-
-Luego toda la instalaci[on esta armada con un stack completo e integrado de docker, que utiliza partir de utilizar comando docker-compose arma todo el stack de microservicios
+Toda la instalaci[on esta armado con un stack de docker, que principalmente utiliza el comando docker-compose
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04-es
 
 ### Instalación 🔧
@@ -48,7 +45,7 @@ Para ver el status y administrar los contenedores puedes usar el comando docker-
 
     * Portainer:        http://localhost:9000
 
-La primera vez que ingreses te va a solicitar crear una password para la cuenta admin, y luego tendras acceso a la gestión y administracion de los contenedores, acceder a las consolas de los mismos, monitoreas recursos y status de los servicios.
+La primera vez que ingreses te va a solicitar crear una password para la cuenta admin.
 
 ### Servicios incluidos ⌨️
 
@@ -72,8 +69,7 @@ En los archivos requirements.txt encontraras las librerias que se han incluido, 
     * xgboost
     * IBPy2
     * ib_insync
-    * backtrader2 (fork de backtrader con bugfixes)
-    * vectorbt
+    * backtrader
     * bs4
     * peewee
     * xlrd
