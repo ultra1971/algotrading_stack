@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 x-airflow-common:
     &airflow-common
@@ -19,7 +19,9 @@ x-airflow-common:
         - ${WD}/airflow/logs:/opt/airflow/logs
         - ${WD}/airflow/plugins:/opt/airflow/plugins
         - ${ND}:/home/airflow/notebooks
-    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+        - ${ND}/.config/matplotlib:/home/airflow/.config/matplotlib
+        - /home/algotrading:/home/airflow/algotrading
+    user: ${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}
     depends_on:
         redis:
             condition: service_healthy
@@ -30,7 +32,7 @@ services:
 
     portainer:
         container_name: "portainer"
-        image: portainer/portainer-ce
+        image: portainer/portainer-ce:latest
         command: -H unix:///var/run/docker.sock
         restart: always
         ports:
@@ -178,7 +180,7 @@ services:
             context: ./dockerfile_mlflowserver
         working_dir: "/mlflow-image"
         volumes:
-            - ${WD}/mlflow:/mlflow-image
+            - ${WD}/mlflow-image:/mlflow-image
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:5500"]
             interval: 60s
@@ -197,7 +199,8 @@ services:
         build:
             context: ./dockerfile_jupyter_notebook
         volumes:
-            - ${ND}:/home/jovyan/notebooks
+            - ${ND}:/home/airflow/notebooks
+            - ${ND}/work:/home/jovyan/work
             - ${WD}/mlflow:/mlflow-image
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:8888"]
@@ -205,6 +208,11 @@ services:
             timeout: 5s
             retries: 3
         environment: 
+            NB_USER: airflow
+            NB_UID: 1010
+            NB_GID: 1020
+            CHOWN_HOME: 'yes'
+            CHOWN_HOME_OPTS: -R
             MLFLOW_TRACKING_URI: http://mlflow-image
             TZ: ${TZ}   
         ports:    
@@ -230,7 +238,8 @@ services:
             - reverseproxy
         volumes:
             - ${WD}/superset/:/etc/superset
-            - ${WD}/superset/:/var/lib/superset   
+            - ${WD}/superset/:/var/lib/superset
+            - ${ND}:/home/airflow/notebooks 
         depends_on:
             - pg-master
 
@@ -256,7 +265,7 @@ services:
         image: mgvazquez/ibgateway:latest
         restart: always
         ports:
-            - "192.168.1.10:7497:7497"
+            - "7497:7497"
             - "4001:4001"
             - "5999:5999"
         environment:
@@ -270,13 +279,9 @@ services:
 volumes:
     redis-volume:
         external: false
-        name: redis-volume
     pg-master-volume:
         external: false
-        name: pg-master-volume
     pg-airflow-volume:
         external: false
-        name: pg-airflow-volume
     portainer-volume:
         external: false
-        name: portainer-volume
