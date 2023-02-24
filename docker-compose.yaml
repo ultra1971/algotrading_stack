@@ -30,7 +30,7 @@ services:
 
     portainer:
         container_name: "portainer"
-        image: portainer/portainer-ce
+        image: portainer/portainer-ce:latest
         command: -H unix:///var/run/docker.sock
         restart: always
         ports:
@@ -46,6 +46,9 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - portainer-volume:/data
+        networks:
+            default:
+                ipv4_address: 172.19.0.2
 
     redis:
         image: redis
@@ -62,7 +65,29 @@ services:
             timeout: 30s
             retries: 50
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.3
 
+    reverseproxy:
+        container_name: "reverseproxy"
+        build:
+            context: ./dockerfile_reverseproxy
+        ports:
+            - 80:80
+        healthcheck:
+            test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/health"]
+            interval: 60s
+            timeout: 5s
+            retries: 3
+        environment:
+            TZ: ${TZ}
+        volumes:
+            - ${ND}:/etc/nginx/html/
+        restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.4
 
     pg-airflow:
         image: postgres
@@ -81,6 +106,9 @@ services:
             interval: 5s
             retries: 5
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.5
  
     pg-master:
         image: postgres:13
@@ -100,6 +128,9 @@ services:
           interval: 5s
           retries: 5
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.6
 
     pgadmin:
         image: dpage/pgadmin4
@@ -116,18 +147,27 @@ services:
             - reverseproxy
         depends_on:
             - pg-master
+        networks:
+            default:
+                ipv4_address: 172.19.0.7
        
     airflow-scheduler:
         <<: *airflow-common
         container_name: "airflow-scheduler"
         command: scheduler
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.10
 
     airflow-worker:
         <<: *airflow-common
         container_name: "airflow-worker"
         command: celery worker
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.11
 
     airflow-webserver:
         <<: *airflow-common
@@ -147,6 +187,9 @@ services:
             timeout: 10s
             retries: 5
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.12
 
     airflow-flower:
         <<: *airflow-common
@@ -160,6 +203,9 @@ services:
           timeout: 10s
           retries: 5
         restart: always
+        networks:
+            default:
+                ipv4_address: 172.19.0.13
 
     airflow-init:
         <<: *airflow-common
@@ -171,6 +217,28 @@ services:
             _AIRFLOW_WWW_USER_CREATE: 'true'
             _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
             _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+        networks:
+            default:
+                ipv4_address: 172.19.0.19
+
+    ib-gateway:
+        container_name: "ib-gateway"
+        image: mgvazquez/ibgateway:latest
+        restart: always
+        ports:
+            - "7497:7497"
+            - "4001:4001"
+            - "5999:5999"
+        environment:
+            TZ: ${TZ}
+            VNC_PASSWORD: ib
+            VNC_PORT: 5999
+            TWSUSERID: ${TWSUSERID}
+            TWSPASSWORD: ${TWSPASSWORD}
+            TRADING_MODE: ${TRADING_MODE}
+        networks:
+            default:
+                ipv4_address: 172.19.0.20
 
     mlflow:
         container_name: "mlflow"
@@ -178,7 +246,7 @@ services:
             context: ./dockerfile_mlflowserver
         working_dir: "/mlflow-image"
         volumes:
-            - ${WD}/mlflow:/mlflow-image
+            - ${WD}/mlflow-image:/mlflow-image
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:5500"]
             interval: 60s
@@ -191,12 +259,16 @@ services:
         command: mlflow server --host 0.0.0.0 --port 5500 --backend-store-uri /mlflow-image/mlruns
         depends_on:
             - reverseproxy
+        networks:
+            default:
+                ipv4_address: 172.19.0.21
 
     jupyter:
         container_name: "jupyter"
         build:
             context: ./dockerfile_jupyter_notebook
         volumes:
+            - ${ND}:/home/airflow/notebooks
             - ${ND}:/home/jovyan/notebooks
             - ${WD}/mlflow:/mlflow-image
         healthcheck:
@@ -204,13 +276,21 @@ services:
             interval: 60s
             timeout: 5s
             retries: 3
-        environment: 
+        environment:
+            NB_USER: airflow
+            NB_UID: 1010
+            NB_GID: 1020
+            CHOWN_HOME: 'yes'
+            CHOWN_HOME_OPTS: -R
             MLFLOW_TRACKING_URI: http://mlflow-image
             TZ: ${TZ}   
         ports:    
             - "8888:8888"
         depends_on:
             - reverseproxy
+        networks:
+            default:
+                ipv4_address: 172.19.0.22
 
     superset:
         container_name: "superset"
@@ -230,53 +310,21 @@ services:
             - reverseproxy
         volumes:
             - ${WD}/superset/:/etc/superset
-            - ${WD}/superset/:/var/lib/superset   
+            - ${WD}/superset/:/var/lib/superset 
+            - ${ND}:/home/airflow/notebooks  
         depends_on:
             - pg-master
-
-    reverseproxy:
-        container_name: "reverseproxy"
-        build:
-            context: ./dockerfile_reverseproxy
-        ports:
-            - 80:80
-        healthcheck:
-            test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/health"]
-            interval: 60s
-            timeout: 5s
-            retries: 3
-        environment:
-            TZ: ${TZ}
-        volumes:
-            - ${ND}:/etc/nginx/html/
-        restart: always
-
-    ib-gateway:
-        container_name: "ib-gateway"
-        image: mgvazquez/ibgateway:latest
-        restart: always
-        ports:
-            - "192.168.1.10:7497:7497"
-            - "4001:4001"
-            - "5999:5999"
-        environment:
-            TZ: ${TZ}
-            VNC_PASSWORD: ib
-            VNC_PORT: 5999
-            TWSUSERID: ${TWSUSERID}
-            TWSPASSWORD: ${TWSPASSWORD}
-            TRADING_MODE: ${TRADING_MODE}
+        networks:
+            default:
+                ipv4_address: 172.19.0.23
     
 volumes:
     redis-volume:
         external: false
-        name: redis-volume
     pg-master-volume:
         external: false
-        name: pg-master-volume
     pg-airflow-volume:
         external: false
-        name: pg-airflow-volume
     portainer-volume:
         external: false
-        name: portainer-volume
+
