@@ -19,6 +19,7 @@ x-airflow-common:
         - ${WD}/airflow/logs:/opt/airflow/logs
         - ${WD}/airflow/plugins:/opt/airflow/plugins
         - ${ND}:/home/airflow/notebooks
+        - /home/algotrading:/home/airflow/algotrading
     user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
     depends_on:
         redis:

@@ -9,8 +9,11 @@ tables
 matplotlib==3.3.3
 psycopg2-binary
 mlflow==1.4.0
-sklearn
+scikit-learn
+lightgbm
+#lightgbm==3.2.1
 xgboost
+fastai
 IBPy2
 ib_insync
 backtrader2
@@ -61,3 +64,4 @@ xverse
 pykalman
 vectorbt
 kaleido
+dataframe_image
