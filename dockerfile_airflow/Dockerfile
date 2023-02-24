@@ -22,6 +22,7 @@ RUN cd .. && rm -rf ta-lib/
 ENV NUMBA_CACHE_DIR=/tmp
 
 USER airflow
+
 COPY requirements.txt /tmp/
 RUN pip3 install --requirement /tmp/requirements.txt
 
@@ -31,6 +32,3 @@ ENV NUMBA_CACHE_DIR=/tmp
 COPY locator.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/plot/locator.py
 COPY plot.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/plot/plot.py
 COPY yahoo.py /home/airflow/.local/lib/python3.8/site-packages/backtrader/feeds/yahoo.py
-
-
-
