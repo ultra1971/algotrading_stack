@@ -65,3 +65,4 @@ pykalman
 vectorbt
 kaleido
 dataframe_image
+chart-studio
