@@ -1,4 +1,4 @@
-FROM jupyter/datascience-notebook
+FROM jupyter/datascience-notebook:python-3.9.13
 
 USER root
 
@@ -22,12 +22,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz
 #WORKDIR /ta-lib
 # numpy needs to be installed before TA-Lib
-RUN pip3 install 'numpy==1.19.2' \
+RUN pip3 install 'numpy==1.23.5' \
   && cd ta-lib/ \
   && ./configure --prefix=/usr \
   && make \
   && make install \
-  && pip3 install 'TA-Lib==0.4.20'
+  && pip3 install 'TA-Lib==0.4.28'
 RUN cd .. && rm -rf ta-lib/
 
 COPY requirements.txt /tmp/
@@ -44,22 +44,22 @@ RUN python -m pip install --upgrade --no-deps --force-reinstall notebook
 RUN python -m pip install jupyterthemes
 RUN python -m pip install --upgrade jupyterthemes
 RUN python -m pip install jupyter_contrib_nbextensions
-RUN jupyter contrib nbextension install --user
+# RUN jupyter contrib nbextension install --user
 # enable the Nbextensions
-RUN jupyter nbextension enable contrib_nbextensions_help_item/main
-RUN jupyter nbextension enable autosavetime/main
-RUN jupyter nbextension enable codefolding/main
-RUN jupyter nbextension enable code_font_size/code_font_size
-RUN jupyter nbextension enable code_prettify/code_prettify
-RUN jupyter nbextension enable collapsible_headings/main
-RUN jupyter nbextension enable comment-uncomment/main
-RUN jupyter nbextension enable equation-numbering/main
-RUN jupyter nbextension enable execute_time/ExecuteTime 
-RUN jupyter nbextension enable gist_it/main 
-RUN jupyter nbextension enable hide_input/main 
-RUN jupyter nbextension enable spellchecker/main
-RUN jupyter nbextension enable toc2/main
-RUN jupyter nbextension enable toggle_all_line_numbers/main
+#RUN jupyter nbextension enable contrib_nbextensions_help_item/main
+#RUN jupyter nbextension enable autosavetime/main
+#RUN jupyter nbextension enable codefolding/main
+#RUN jupyter nbextension enable code_font_size/code_font_size
+#RUN jupyter nbextension enable code_prettify/code_prettify
+#RUN jupyter nbextension enable collapsible_headings/main
+#RUN jupyter nbextension enable comment-uncomment/main
+#RUN jupyter nbextension enable equation-numbering/main
+#RUN jupyter nbextension enable execute_time/ExecuteTime 
+#RUN jupyter nbextension enable gist_it/main 
+#RUN jupyter nbextension enable hide_input/main 
+#RUN jupyter nbextension enable spellchecker/main
+#RUN jupyter nbextension enable toc2/main
+#RUN jupyter nbextension enable toggle_all_line_numbers/main
 
 CMD ["jupyter", "notebook", "--no-browser","--NotebookApp.token=''","--NotebookApp.password=''", "--allow-root"]
 

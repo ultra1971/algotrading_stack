@@ -1,0 +1,15 @@
+version: '3'
+services:
+  gateway:
+    image: mgvazquez/ibgateway:latest
+    restart: always
+    ports:
+      - "7462:7462"
+      - "4001:4001"
+      - "5900:5900"
+    environment:
+      - VNC_PASSWORD=${VNC_PASSWORD}
+      - VNC_PORT=5900
+      - TWSUSERID=${TWSUSERID}
+      - TWSPASSWORD=${TWSPASSWORD}
+      - TRADING_MODE=paper

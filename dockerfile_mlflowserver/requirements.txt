@@ -1,8 +1,7 @@
 psycopg2-binary
 mlflow==1.4.0
-sklearn
+scikit-learn
 xgboost
 xlrd
-ffn
 
 

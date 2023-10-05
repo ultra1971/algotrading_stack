@@ -224,7 +224,8 @@ services:
 
     ib-gateway:
         container_name: "ib-gateway"
-        image: mgvazquez/ibgateway:latest
+        build:
+            context: ./ibgateway-master
         restart: always
         ports:
             - "7497:7497"

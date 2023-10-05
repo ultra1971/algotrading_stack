@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+shopt -s expand_aliases
+
+declare -r service_name='socat'
+
+source /etc/profile
+
+alias debug="while read data; do echo -e "${data}" | log debug;   done"
+alias info="while read data;  do echo -e "${data}" | log info;    done"
+alias warn="while read data;  do echo -e "${data}" | log warning; done"
+alias err="while read data;   do echo -e "${data}" | log err;     done"
+
+function log(){
+    # ATENCIÓN: NUNCA USAR DIRECTAMENTE, en su lugar utilizar los alias 'debug', 'info', 'warn' y 'err'
+    local _severity=${1}; shift;
+    logger -p syslog.${_severity} -t ${service_name} -- "${data}"
+}
+
+echo "Starting Interactive Brokers Controller" | info
+exec socat TCP-LISTEN:4001,fork TCP:127.0.0.1:4002 2>&1 | info
