@@ -305,6 +305,7 @@ services:
             MAPBOX_API_KEY: ${MAPBOX_API_KEY}
             SUPERSET_HOME: /etc/superset
             SUPERSET_ENV: production
+            SUPERSET_SECRET_KEY: TwGiSenUQ0oUGEQT+E1o6IZzWzNDClPLppLmamPR7DN7DXhqZHdYJuRA
             TZ: ${TZ}
         ports:
             - "8088:8088"
