@@ -68,3 +68,4 @@ dataframe_image
 chart-studio
 metastock2pd
 mplfinance
+rich
