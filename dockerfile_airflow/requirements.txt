@@ -61,7 +61,7 @@ pyyamL
 lxml
 cssselect
 xverse
-pykalman
+pykalman-bardo
 vectorbt
 kaleido
 dataframe_image
