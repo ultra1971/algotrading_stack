@@ -1,7 +1,7 @@
+numpy==1.23.5
+pandas==2.2.2
 psycopg2-binary
-mlflow
 scikit-learn
-xgboost
 IBPy2
 backtrader2
 ib_insync
@@ -12,10 +12,9 @@ xlrd
 ffn
 pyfolio
 quantstats
-riskfolio_lib==3.3.0
+riskfolio_lib
 black_box
 statsmodels
-shap
 yfinance
 scipy
 requests

@@ -1,7 +1,0 @@
-psycopg2-binary
-mlflow==1.4.0
-scikit-learn
-xgboost
-xlrd
-
-

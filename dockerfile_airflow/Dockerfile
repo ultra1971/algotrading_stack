@@ -1,4 +1,4 @@
-FROM apache/airflow:2.4.3-python3.9
+FROM apache/airflow:2.9.3-python3.9
 
 USER root
 RUN apt-get update && apt-get install -y \
@@ -17,7 +17,7 @@ RUN pip3 install 'numpy==1.23.5' \
   && ./configure --prefix=/usr \
   && make \
   && make install \
-  && pip3 install 'TA-Lib==0.4.28'
+  && pip3 install 'TA-Lib==0.4.32'
 RUN cd .. && rm -rf ta-lib/
 ENV NUMBA_CACHE_DIR=/tmp
 
