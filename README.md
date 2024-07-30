@@ -57,25 +57,18 @@ Los diferentes servicios del stack se pueden acceder a traves:
     * Superset:         http://localhost:8088
     * Celery Flower:    http://localhost:5555
     * Jupyter Notebook: http://localhost:8888
-    * MLflow:           http://localhost:5500
     * PgAdmin:          http://localhost:1234
-    * IBGateway:       via vnc: localhost:5999
+    * IBGateway         via vnc localhost:5999
 
 ## Paquetes y librerias 📦
 
 En los archivos requirements.txt encontraras las librerias que se han incluido, he incluido entre otras:
 
-    * psycopg2-binary
-    * mlflow
     * sklearn
     * xgboost
-    * IBPy2
     * ib_insync
     * backtrader2 (fork de backtrader con bugfixes)
     * vectorbt
-    * bs4
-    * peewee
-    * xlrd
     * ffn
     * pyfolio
     * quantstats
@@ -88,6 +81,5 @@ Adicionalmente en el Dockerfile de Jupyter Notebook se encuentran los extensione
 * A @paduel por la inspiración y el empujoncito en armar este stack 🤓
 * Basado en las ideas y en el trabajo de @saeed349 
 https://github.com/saeed349/Microservices-Based-Algorithmic-Trading-System
-* Container IBGateway desarrollado por @mgvazquez https://github.com/mgvazquez/ibgateway 
 
 

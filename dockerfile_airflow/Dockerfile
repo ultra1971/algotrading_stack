@@ -26,9 +26,7 @@ USER airflow
 COPY requirements.txt /tmp/
 RUN pip3 install --requirement /tmp/requirements.txt
 
+COPY plot.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/plot.py
+
 ENV PYTHONPATH "${PYTHONPATH}:/usr/local/airflow/dags"
 ENV NUMBA_CACHE_DIR=/tmp
-
-COPY locator.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/locator.py
-COPY plot.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/plot.py
-COPY yahoo.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/feeds/yahoo.py

@@ -2,7 +2,6 @@ numpy==1.23.5
 pandas==2.2.2
 psycopg2-binary
 scikit-learn
-IBPy2
 backtrader2
 ib_insync
 bs4

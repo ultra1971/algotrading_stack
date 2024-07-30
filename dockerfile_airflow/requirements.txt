@@ -3,15 +3,13 @@ TA_Lib==0.4.32
 pandas==2.2.2
 numba==0.56.4
 tables
-matplotlib==3.3.3
+matplotlib
 psycopg2-binary
-mlflow==1.4.0
 scikit-learn
 lightgbm
 xgboost
-IBPy2
 ib_insync
-backtrader2
+backtrader
 bs4
 peewee
 adjustText
@@ -48,3 +46,4 @@ chart-studio
 metastock2pd
 mplfinance
 rich
+seaborn
