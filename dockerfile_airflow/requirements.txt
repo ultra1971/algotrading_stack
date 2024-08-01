@@ -17,14 +17,14 @@ xlrd
 ffn
 pyfolio
 quantstats
-riskfolio_lib
+riskfolio_lib==4.4.2
 black_box
 statsmodels
 shap
 yfinance
 scipy
 requests
-pandas_market_calendars==2.0
+pandas_market_calendars
 pandas_datareader
 graphviz
 pandas_profiling
