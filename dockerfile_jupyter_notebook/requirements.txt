@@ -11,7 +11,7 @@ xlrd
 ffn
 pyfolio
 quantstats
-riskfolio_lib
+riskfolio_lib==4.4.2
 black_box
 statsmodels
 yfinance
