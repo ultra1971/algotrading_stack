@@ -49,7 +49,7 @@ services:
             - portainer-volume:/data
         networks:
             default:
-                ipv4_address: 172.19.0.2
+                ipv4_address: 172.20.0.2
 
     redis:
         image: redis
@@ -68,7 +68,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.3
+                ipv4_address: 172.20.0.3
 
     reverseproxy:
         container_name: "reverseproxy"
@@ -88,7 +88,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.4
+                ipv4_address: 172.20.0.4
 
     pg-airflow:
         image: postgres
@@ -109,7 +109,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.5
+                ipv4_address: 172.20.0.5
  
     pg-master:
         image: postgres:13
@@ -131,7 +131,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.6
+                ipv4_address: 172.20.0.6
 
     pgadmin:
         image: dpage/pgadmin4
@@ -150,7 +150,7 @@ services:
             - pg-master
         networks:
             default:
-                ipv4_address: 172.19.0.7
+                ipv4_address: 172.20.0.7
        
     airflow-scheduler:
         <<: *airflow-common
@@ -159,7 +159,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.10
+                ipv4_address: 172.20.0.10
 
     airflow-worker:
         <<: *airflow-common
@@ -168,7 +168,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.11
+                ipv4_address: 172.20.0.11
 
     airflow-webserver:
         <<: *airflow-common
@@ -190,7 +190,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.12
+                ipv4_address: 172.20.0.12
 
     airflow-flower:
         <<: *airflow-common
@@ -206,7 +206,7 @@ services:
         restart: always
         networks:
             default:
-                ipv4_address: 172.19.0.13
+                ipv4_address: 172.20.0.13
 
     airflow-init:
         <<: *airflow-common
@@ -220,7 +220,7 @@ services:
             _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
         networks:
             default:
-                ipv4_address: 172.19.0.19
+                ipv4_address: 172.20.0.19
 
     ib-gateway:
         container_name: "ib-gateway"
@@ -240,7 +240,24 @@ services:
             TRADING_MODE: ${TRADING_MODE}
         networks:
             default:
-                ipv4_address: 172.19.0.20
+                ipv4_address: 172.20.0.20
+    mt5:
+        container_name: "mt5"
+        build:
+            context: ./dockerfile_mt5
+        volumes:
+          - ${WD}/config/:/config
+        ports:
+          - "3000:3000"
+          - "8001:8001"
+        environment:
+            UID: 1000
+            GID: 1000
+            CUSTOM_USER: ${CUSTOM_USER}
+            PASSWORD: ${PASSWORD}
+        networks:
+            default:
+                ipv4_address: 172.20.0.21
 
     jupyter:
         container_name: "jupyter"
@@ -269,7 +286,7 @@ services:
             - reverseproxy
         networks:
             default:
-                ipv4_address: 172.19.0.22
+                ipv4_address: 172.20.0.22
 
     superset:
         container_name: "superset"
@@ -296,7 +313,7 @@ services:
             - pg-master
         networks:
             default:
-                ipv4_address: 172.19.0.23
+                ipv4_address: 172.20.0.23
     
 volumes:
     redis-volume:
@@ -307,4 +324,9 @@ volumes:
         external: false
     portainer-volume:
         external: false
+
+networks:
+  default:
+    external:
+      name: algotrading_stack_default
 

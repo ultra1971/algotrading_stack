@@ -30,13 +30,17 @@ La instalación es muy sencilla, veamos...
     
     ND="directorio donde se alojaron los notebooks y demas archivos python que seran accesibles desde los contenedores"
 
-    TWSUSERID="usuario del gateway de Interactive broker"
+    TWSUSERID="usuario del gateway de Interactive Brokers"
     
-    TWSPASSWORD="password del gateway de Interactive broker"
+    TWSPASSWORD="password del gateway de Interactive Brokers"
     
-    TRADING_MODE="modalidad del gateway de Interactive broker paper o live"
+    TRADING_MODE="modalidad del gateway de Interactive Brokers paper o live"
 
-    TZ="timezone del container"
+    TZ="timezone del gateway de Interactive Brokers"
+
+    CUSTOM_USER="usuario de Metatrader Web"
+
+    PASSWORD="password de Metatrader Web, si se deja en blanco entonces no se pedira autenticacion"
 
 3) Ejecutar el script
 ./starter_script.sh
@@ -58,7 +62,9 @@ Los diferentes servicios del stack se pueden acceder a traves:
     * Celery Flower:    http://localhost:5555
     * Jupyter Notebook: http://localhost:8888
     * PgAdmin:          http://localhost:1234
+    * Metatrader        http://localhost:3000
     * IBGateway         via vnc localhost:5999
+
 
 ## Paquetes y librerias 📦
 
@@ -81,5 +87,8 @@ Adicionalmente en el Dockerfile de Jupyter Notebook se encuentran los extensione
 * A @paduel por la inspiración y el empujoncito en armar este stack 🤓
 * Basado en las ideas y en el trabajo de @saeed349 
 https://github.com/saeed349/Microservices-Based-Algorithmic-Trading-System
+* Para Metatrader he integrado la imagen desarrollada por @gmag11
+https://github.com/gmag11/MetaTrader5-Docker-Image
+
 
 
