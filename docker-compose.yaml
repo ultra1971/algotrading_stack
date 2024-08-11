@@ -241,6 +241,7 @@ services:
         networks:
             default:
                 ipv4_address: 172.20.0.20
+
     mt5:
         container_name: "mt5"
         build:
@@ -260,6 +261,7 @@ services:
             GID: 1000
             CUSTOM_USER: ${CUSTOM_USER}
             PASSWORD: ${PASSWORD}
+        restart: always
         networks:
             default:
                 ipv4_address: 172.20.0.21
