@@ -15,7 +15,7 @@ RUN apt-get update && apt-get upgrade -y
 # Install required packages
 RUN apt-get install -y \
     python3-pip \
-    wget vim \
+    wget vim curl \
     && pip3 install --upgrade pip
 
 # Add WineHQ repository key and APT source
