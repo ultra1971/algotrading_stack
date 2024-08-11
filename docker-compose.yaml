@@ -62,9 +62,9 @@ services:
             TZ: ${TZ}
         healthcheck:
             test: ["CMD", "redis-cli", "ping"]
-            interval: 5s
+            interval: 60s
             timeout: 30s
-            retries: 50
+            retries: 10
         restart: always
         networks:
             default:
@@ -79,8 +79,8 @@ services:
         healthcheck:
             test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/health"]
             interval: 60s
-            timeout: 5s
-            retries: 3
+            timeout: 30s
+            retries: 5
         environment:
             TZ: ${TZ}
         volumes:
@@ -184,8 +184,8 @@ services:
             - pg-airflow
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-            interval: 10s
-            timeout: 10s
+            interval: 30s
+            timeout: 30s
             retries: 5
         restart: always
         networks:
@@ -200,8 +200,8 @@ services:
             - 5555:5555
         healthcheck:
           test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
-          interval: 10s
-          timeout: 10s
+          interval: 30s
+          timeout: 30s
           retries: 5
         restart: always
         networks:
@@ -247,6 +247,11 @@ services:
             context: ./dockerfile_mt5
         volumes:
           - ${WD}/config/:/config
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:3000"]
+            interval: 30s
+            timeout: 30s
+            retries: 5
         ports:
           - "3000:3000"
           - "8001:8001"
@@ -269,9 +274,9 @@ services:
             - ${WD}/mlflow:/mlflow-image
         healthcheck:
             test: ["CMD", "curl", "--fail", "http://localhost:8888"]
-            interval: 60s
-            timeout: 5s
-            retries: 3
+            interval: 30s
+            timeout: 30s
+            retries: 5
         environment:
             NB_USER: airflow
             NB_UID: 1010
