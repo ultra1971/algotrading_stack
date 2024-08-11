@@ -28,7 +28,6 @@ pytz
 tabulate
 joblib
 ccxt
-fracdiff
 ibapi
 PyYAML
 xverse

@@ -1,4 +1,4 @@
-FROM apache/airflow:2.9.3-python3.9
+FROM apache/airflow:2.9.3-python3.10
 
 USER root
 RUN apt-get update && apt-get install -y \
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 	        g++ make wget git curl gcc gnupg2 \
     && rm -rf /var/lib/apt/lists/*
 
-# TA-Lib
+
 RUN curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz
 
 RUN pip3 install 'numpy==1.23.5' \

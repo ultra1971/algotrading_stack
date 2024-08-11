@@ -1,4 +1,4 @@
-FROM jupyter/datascience-notebook:python-3.9.13
+FROM jupyter/datascience-notebook:python-3.10.11
 
 USER root
 
@@ -27,7 +27,7 @@ RUN pip3 install 'numpy==1.23.5' \
   && ./configure --prefix=/usr \
   && make \
   && make install \
-  && pip3 install 'TA-Lib==0.4.28'
+  && pip3 install 'TA-Lib==0.4.32'
 RUN cd .. && rm -rf ta-lib/
 
 COPY requirements.txt /tmp/
