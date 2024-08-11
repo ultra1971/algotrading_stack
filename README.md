@@ -42,7 +42,9 @@ La instalación es muy sencilla, veamos...
 
     PASSWORD="password de Metatrader Web, si se deja en blanco entonces no se pedira autenticacion"
 
-3) Ejecutar el script
+3) Se sebe network algotrading_stack_default en docker con la subnet correspondiente para asignar las IPs correspondientes a cada servicio
+
+4) Ejecutar el script
 ./starter_script.sh
 
 ### Gestión de los contenedores 🔩
@@ -62,9 +64,9 @@ Los diferentes servicios del stack se pueden acceder a traves:
     * Celery Flower:    http://localhost:5555
     * Jupyter Notebook: http://localhost:8888
     * PgAdmin:          http://localhost:1234
-    * Metatrader        http://localhost:3000
+    * Metatrader        http://localhost:3000 
+                        mt5linux via host localhost port 8001
     * IBGateway         via vnc localhost:5999
-
 
 ## Paquetes y librerias 📦
 
