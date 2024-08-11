@@ -26,6 +26,12 @@ USER airflow
 COPY requirements.txt /tmp/
 RUN pip3 install --requirement /tmp/requirements.txt
 
+USER root
+RUN pip3 install mt5linux
+RUN pip3 install 'numpy==1.23.5'
+
+USER airflow
+
 COPY plot.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/plot.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/usr/local/airflow/dags"
