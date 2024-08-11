@@ -5,7 +5,6 @@
 
 Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading, el objetivo de este proyecto es proveer toda la infraestructura necesaria sin necesidad de instalar software o componentes locales sino a traves de un entorno contenerizado y virtualizado con la tecnologia provista por docker.
 
-
 ### Pre-requisitos 📋
 
 Solo tienes que tenes instalado docker en una maquina (linux, obvio)
@@ -42,7 +41,7 @@ La instalación es muy sencilla, veamos...
 
     PASSWORD="password de Metatrader Web, si se deja en blanco entonces no se pedira autenticacion"
 
-3) Se sebe network algotrading_stack_default en docker con la subnet correspondiente para asignar las IPs correspondientes a cada servicio
+3) Debes crear la network algotrading_stack_default en docker con la subnet correspondiente para asignar las IPs correspondientes a cada servicio
 
 4) Ejecutar el script
 ./starter_script.sh
@@ -81,6 +80,7 @@ En los archivos requirements.txt encontraras las librerias que se han incluido, 
     * pyfolio
     * quantstats
     * riskfolio-lib
+    * mt5linux
 
 Adicionalmente en el Dockerfile de Jupyter Notebook se encuentran los extensiones que se han habilitado a los notebooks.
 
