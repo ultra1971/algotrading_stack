@@ -246,6 +246,7 @@ services:
         container_name: "mt5"
         build:
             context: ./dockerfile_mt5
+        restart: always
         volumes:
           - ${WD}/config/:/config
         healthcheck:
@@ -261,7 +262,6 @@ services:
             GID: 1000
             CUSTOM_USER: ${CUSTOM_USER}
             PASSWORD: ${PASSWORD}
-        restart: always
         networks:
             default:
                 ipv4_address: 172.20.0.21
