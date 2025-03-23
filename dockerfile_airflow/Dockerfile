@@ -1,4 +1,4 @@
-FROM apache/airflow:2.9.3-python3.10
+FROM apache/airflow:2.10.5-python3.11
 
 USER root
 RUN apt-get update && apt-get install -y \
@@ -9,28 +9,18 @@ RUN apt-get update && apt-get install -y \
 	        g++ make wget git curl gcc gnupg2 \
     && rm -rf /var/lib/apt/lists/*
 
+RUN curl -L https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb -o ta-lib_0.6.4_amd64.deb
+RUN dpkg -i ta-lib_0.6.4_amd64.deb
 
-RUN curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz
+#RUN pip3 install numpy \
+#  && pip3 install TA-Lib
 
-RUN pip3 install 'numpy==1.23.5' \
-  && cd ta-lib/ \
-  && ./configure --prefix=/usr \
-  && make \
-  && make install \
-  && pip3 install 'TA-Lib==0.4.32'
-RUN cd .. && rm -rf ta-lib/
 ENV NUMBA_CACHE_DIR=/tmp
 
 USER airflow
 
 COPY requirements.txt /tmp/
 RUN pip3 install --requirement /tmp/requirements.txt
-
-USER root
-RUN pip3 install mt5linux
-RUN pip3 install 'numpy==1.23.5'
-
-USER airflow
 
 COPY plot.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/plot.py
 

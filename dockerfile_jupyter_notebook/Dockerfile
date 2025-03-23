@@ -19,16 +19,11 @@ RUN apt-get update && apt-get install -y \
 #  make install
 #RUN rm -R ta-lib ta-lib-0.4.0-src.tar.gz
 
-RUN curl -L https://downloads.sourceforge.net/project/ta-lib/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz | tar xvz
-#WORKDIR /ta-lib
-# numpy needs to be installed before TA-Lib
-RUN pip3 install 'numpy==1.23.5' \
-  && cd ta-lib/ \
-  && ./configure --prefix=/usr \
-  && make \
-  && make install \
-  && pip3 install 'TA-Lib==0.4.32'
-RUN cd .. && rm -rf ta-lib/
+RUN curl -L https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb
+RUN dpkg -i ta-lib_0.6.4_amd64.deb
+
+RUN pip3 install numpy \
+  && pip3 install TA-Lib
 
 COPY requirements.txt /tmp/
 RUN pip install --requirement /tmp/requirements.txt && \

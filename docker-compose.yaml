@@ -266,35 +266,6 @@ services:
             default:
                 ipv4_address: 172.20.0.21
 
-    jupyter:
-        container_name: "jupyter"
-        build:
-            context: ./dockerfile_jupyter_notebook
-        volumes:
-            - ${ND}:/home/airflow/notebooks
-            - ${ND}:/home/jovyan/notebooks
-            - ${WD}/mlflow:/mlflow-image
-        healthcheck:
-            test: ["CMD", "curl", "--fail", "http://localhost:8888"]
-            interval: 30s
-            timeout: 30s
-            retries: 5
-        environment:
-            NB_USER: airflow
-            NB_UID: 1010
-            NB_GID: 1020
-            CHOWN_HOME: 'yes'
-            CHOWN_HOME_OPTS: -R
-            MLFLOW_TRACKING_URI: http://mlflow-image
-            TZ: ${TZ}   
-        ports:    
-            - "8888:8888"
-        depends_on:
-            - reverseproxy
-        networks:
-            default:
-                ipv4_address: 172.20.0.22
-
     superset:
         container_name: "superset"
         build:

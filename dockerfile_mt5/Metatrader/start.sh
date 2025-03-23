@@ -4,12 +4,14 @@
 mt5file='/config/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe'
 WINEPREFIX='/config/.wine'
 wine_executable="wine"
-metatrader_version="5.0.36"
+metatrader_version="5.0.4874"
 mt5server_port="8001"
-mono_url="https://dl.winehq.org/wine/wine-mono/8.0.0/wine-mono-8.0.0-x86.msi"
-python_url="https://www.python.org/ftp/python/3.9.0/python-3.9.0.exe"
+mono_url="https://dl.winehq.org/wine/wine-mono/10.0.0/wine-mono-10.0.0-x86.msi"
+git_url="https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe"
+python_url="https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 mt5setup_url="https://download.mql5.com/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
 
+export WINEDEBUG=-all
 # Function to display a graphical message
 show_message() {
     echo $1
@@ -64,6 +66,7 @@ else
     $wine_executable "/config/.wine/drive_c/mt5setup.exe" "/auto" &
     wait
     rm -f /config/.wine/drive_c/mt5setup.exe
+    winetricks -q vcrun2015
 fi
 
 # Recheck if MetaTrader 5 is installed
@@ -76,7 +79,8 @@ fi
 
 
 # Install Python in Wine if not present
-if ! $wine_executable python --version 2>/dev/null; then
+#if ! $wine_executable python --version 2>/dev/null; then
+if ! $wine_executable python -c 'import sys; assert sys.version_info >= (3,11)' > /dev/null; then
     show_message "[5/7] Installing Python in Wine..."
     curl -L $python_url -o /tmp/python-installer.exe
     $wine_executable /tmp/python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
@@ -94,22 +98,30 @@ show_message "[6/7] Installing MetaTrader5 library in Windows"
 if ! is_wine_python_package_installed "MetaTrader5==$metatrader_version"; then
     $wine_executable python -m pip install --no-cache-dir MetaTrader5==$metatrader_version
 fi
+
+# Install git in Windows if not installed
+show_message "[6/7] Checking and installing git in Windows if necessary"
+if ! $wine_executable git --version 2>&1 >/dev/null; then
+    curl -L $git_url -o /tmp/git-installer.exe
+    $wine_executable /tmp/git-installer.exe /verysilent
+fi
+
 # Install mt5linux library in Windows if not installed
 show_message "[6/7] Checking and installing mt5linux library in Windows if necessary"
 if ! is_wine_python_package_installed "mt5linux"; then
-    $wine_executable python -m pip install --no-cache-dir mt5linux
+    $wine_executable python -m pip install --no-cache-dir git+https://github.com/ultra1971/mt5linux.git --ignore-requires-python
 fi
 
 # Install mt5linux library in Linux if not installed
 show_message "[6/7] Checking and installing mt5linux library in Linux if necessary"
 if ! is_python_package_installed "mt5linux"; then
-    pip install --upgrade --no-cache-dir mt5linux
+    pip install git+https://github.com/ultra1971/mt5linux.git --ignore-requires-python --break-system-packages
 fi
 
 # Install pyxdg library in Linux if not installed
 show_message "[6/7] Checking and installing pyxdg library in Linux if necessary"
 if ! is_python_package_installed "pyxdg"; then
-    pip install --upgrade --no-cache-dir pyxdg
+    pip install pyxdg --break-system-packages
 fi
 
 # Start the MT5 server on Linux

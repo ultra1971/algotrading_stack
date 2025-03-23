@@ -1,5 +1,5 @@
-numpy==1.23.5
-pandas==2.2.2
+numpy
+pandas
 psycopg2-binary
 scikit-learn
 backtrader2
@@ -22,7 +22,6 @@ pandas_datareader
 graphviz
 pandas_profiling
 tqdm
-featurewiz
 ib_insync
 pytz
 tabulate
