@@ -4,6 +4,7 @@ matplotlib
 plotly==5.24.1
 seaborn
 riskfolio-lib==4.4.2
+cvxpy[ecos]
 vectorbt
 backtrader2
 pandas_market_calendars
@@ -27,7 +28,6 @@ adjustText
 xlrd
 ffn
 quantstats
-riskfolio_lib==4.4.2
 black_box
 statsmodels
 shap

@@ -225,7 +225,7 @@ services:
     ib-gateway:
         container_name: "ib-gateway"
         build:
-            context: ./ibgateway-master
+            context: ./ibgateway
         restart: always
         ports:
             - "7497:7497"
