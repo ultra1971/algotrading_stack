@@ -61,7 +61,6 @@ Los diferentes servicios del stack se pueden acceder a traves:
     * Airflow:          http://localhost:8080
     * Superset:         http://localhost:8088
     * Celery Flower:    http://localhost:5555
-    * Jupyter Notebook: http://localhost:8888
     * PgAdmin:          http://localhost:1234
     * Metatrader        http://localhost:3000 
                         mt5linux via host localhost port 8001
@@ -81,8 +80,6 @@ En los archivos requirements.txt encontraras las librerias que se han incluido, 
     * quantstats
     * riskfolio-lib
     * mt5linux
-
-Adicionalmente en el Dockerfile de Jupyter Notebook se encuentran los extensiones que se han habilitado a los notebooks.
 
 ## Agradecimientos 📢
 

@@ -58,6 +58,8 @@ if [ -e "$mt5file" ]; then
 else
     show_message "[2/7] File $mt5file is not installed. Installing..."
 
+    # Fix for ucrtbase.dll.crealf
+    winetricks -q vcrun2015
     # Set Windows 10 mode in Wine and download and install MT5
     $wine_executable reg add "HKEY_CURRENT_USER\\Software\\Wine" /v Version /t REG_SZ /d "win10" /f
     show_message "[3/7] Downloading MT5 installer..."
@@ -66,7 +68,6 @@ else
     $wine_executable "/config/.wine/drive_c/mt5setup.exe" "/auto" &
     wait
     rm -f /config/.wine/drive_c/mt5setup.exe
-    winetricks -q vcrun2015
 fi
 
 # Recheck if MetaTrader 5 is installed
