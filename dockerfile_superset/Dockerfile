@@ -1,4 +1,4 @@
-FROM apache/superset:4.0.2
+FROM apache/superset:4.1.1-py311
 USER root
 RUN apt-get update && apt-get install -y \
             bash vim \
