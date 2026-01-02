@@ -11,12 +11,17 @@ ENV TITLE=Metatrader5
 ENV WINEPREFIX="/config/.wine"
 
 # Update package lists and upgrade packages
-RUN apt-get update && apt-get upgrade -y
-
-# Install required packages
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     python3-pip \
-    wget vim curl git pipx
+    wget \
+    vim \
+    curl \
+    git \
+    pipx \
+    software-properties-common \
+    gnupg2 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 #RUN pip3 install --upgrade pip
 

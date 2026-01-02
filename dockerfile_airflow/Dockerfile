@@ -1,12 +1,16 @@
-FROM apache/airflow:2.10.5-python3.11
+FROM apache/airflow:3.1.5-python3.11
 
 USER root
 RUN apt-get update && apt-get install -y \
-	        python3 unzip \
+            build-essential \
 	        python3-dev \
+            libldap2-dev \
+            libsasl2-dev \
+            libssl-dev \
             libhdf5-serial-dev python3-tables python-tables-doc \
             bash vim font-manager xfonts-utils fontconfig\
-	        g++ make wget git curl gcc gnupg2 \
+	        g++ make wget git curl gcc git gnupg2 unzip \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -L https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb -o ta-lib_0.6.4_amd64.deb
@@ -19,8 +23,12 @@ ENV NUMBA_CACHE_DIR=/tmp
 
 USER airflow
 
+RUN pip install apache-airflow-providers-fab
+
+RUN pip install --no-cache-dir --upgrade pip 
+
 COPY requirements.txt /tmp/
-RUN pip3 install --requirement /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt --verbose
 
 COPY plot.py /home/airflow/.local/lib/python3.9/site-packages/backtrader/plot/plot.py
 

@@ -1,5 +1,3 @@
-version: '3'
-
 x-airflow-common:
     &airflow-common
     build:
@@ -7,28 +5,36 @@ x-airflow-common:
     environment:
         &airflow-common-env
         AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-        AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@pg-airflow/airflow
-        AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@pg-airflow/airflow
+        AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@pg-airflow/airflow
+        AIRFLOW__CELERY__RESULT_BACKEND: redis://:@redis:6379/0
         AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-        AIRFLOW__CORE__FERNET_KEY: ''
+        AIRFLOW__CORE__FERNET_KEY: 5Dy0JFMRxClaIrfRjI1rQTj62igThKXvFnkd4SsVtiY=
         AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
         AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+        AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+        AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"   # refresca DAGs cada 30s
+        AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+        AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+        AIRFLOW__API_AUTH__JWT_SECRET: "b2b5f3b949859504d1272651e4cfaa9f6eac58fc5d55bc3e7b8b3fdb0ee89183"
+        AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
         TZ: ${TZ}
     volumes:
         - ${WD}/airflow/dags:/opt/airflow/dags
         - ${WD}/airflow/logs:/opt/airflow/logs
         - ${WD}/airflow/plugins:/opt/airflow/plugins
+        - ${WD}/airflow/include:/opt/airflow/include
         - ${ND}:/home/airflow/notebooks
         - /home/algotrading:/home/airflow/algotrading
-    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+    user: "${AIRFLOW_UID:-50000}:0"
     depends_on:
+        &airflow-common-depends-on
         redis:
             condition: service_healthy
         pg-airflow:
             condition: service_healthy
 
 services:
-
     portainer:
         container_name: "portainer"
         image: portainer/portainer-ce:latest
@@ -47,9 +53,6 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - portainer-volume:/data
-        networks:
-            default:
-                ipv4_address: 172.20.0.2
 
     redis:
         image: redis
@@ -66,9 +69,6 @@ services:
             timeout: 30s
             retries: 10
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.3
 
     reverseproxy:
         container_name: "reverseproxy"
@@ -86,9 +86,6 @@ services:
         volumes:
             - ${ND}:/etc/nginx/html/
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.4
 
     pg-airflow:
         image: postgres
@@ -106,14 +103,10 @@ services:
             test: ["CMD", "pg_isready", "-U", "airflow"]
             interval: 5s
             retries: 5
-        restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.5
+        restart: unless-stopped
  
     pg-master:
         image: postgres:13
-        restart: always
         container_name: "pg-master"
         ports:
             - 5431:5431            
@@ -129,9 +122,6 @@ services:
           interval: 5s
           retries: 5
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.6
 
     pgadmin:
         image: dpage/pgadmin4
@@ -146,51 +136,94 @@ services:
             - 1234:80
         depends_on:
             - reverseproxy
-        depends_on:
             - pg-master
-        networks:
-            default:
-                ipv4_address: 172.20.0.7
+        
+    airflow-apiserver:
+        <<: *airflow-common
+        container_name: "airflow-apiserver"
+        command: api-server --apps all 
+        ports:
+            - 8080:8080
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+        restart: always
+        depends_on:
+            <<: *airflow-common-depends-on
+            airflow-init:
+              condition: service_completed_successfully
        
     airflow-scheduler:
         <<: *airflow-common
         container_name: "airflow-scheduler"
         command: scheduler
+        healthcheck:
+          test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+          interval: 30s
+          timeout: 10s
+          retries: 5
+          start_period: 30s
+
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.10
+        depends_on:
+           <<: *airflow-common-depends-on
+           airflow-init:
+              condition: service_completed_successfully
+
+    airflow-dag-processor:
+        <<: *airflow-common
+        container_name: "airflow-dag-processor"
+        command: dag-processor
+        healthcheck:
+          test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$$HOSTNAME"']
+          interval: 30s
+          timeout: 10s
+          retries: 5
+          start_period: 30s
+        restart: always
+        depends_on:
+          <<: *airflow-common-depends-on
+          airflow-init:
+            condition: service_completed_successfully
+     
+    airflow-triggerer:
+        <<: *airflow-common
+        container_name: "airflow-triggerer"
+        command: triggerer
+        healthcheck:
+          test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$$HOSTNAME"']
+          interval: 30s
+          timeout: 10s
+          retries: 5
+          start_period: 30s
+        restart: always
+
+    airflow-cli:
+        <<: *airflow-common
+        container_name: "airflow-cli"
+        profiles:
+          - debug
+        environment:
+          <<: *airflow-common-env
+          CONNECTION_CHECK_MAX_COUNT: "0"
+        command:
+          - bash
+          - -c
+          - airflow
+        depends_on:
+          <<: *airflow-common-depends-on
 
     airflow-worker:
         <<: *airflow-common
         container_name: "airflow-worker"
         command: celery worker
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.11
-
-    airflow-webserver:
-        <<: *airflow-common
-        container_name: "airflow-webserver"
-        command: webserver
-        ports:
-            - 8080:8080
+        environment:
+            <<: *airflow-common-env
         depends_on:
-            - reverseproxy
-            - redis
-            - airflow-worker
-            - airflow-scheduler
-            - pg-airflow
-        healthcheck:
-            test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-            interval: 30s
-            timeout: 30s
-            retries: 5
-        restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.12
+            <<: *airflow-common-depends-on
 
     airflow-flower:
         <<: *airflow-common
@@ -204,23 +237,28 @@ services:
           timeout: 30s
           retries: 5
         restart: always
-        networks:
-            default:
-                ipv4_address: 172.20.0.13
 
     airflow-init:
         <<: *airflow-common
         container_name: "airflow-init"
-        command: version
+        entrypoint: /bin/bash
+        command:
+          - -c
+          - |
+            if [[ -z "${AIRFLOW_UID}" ]]; then
+              echo
+              echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+            fi
+            mkdir -p /opt/airflow/{logs,dags,plugins,config}
+            chown -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config}
+            exec /entrypoint airflow version
         environment:
             <<: *airflow-common-env
-            _AIRFLOW_DB_UPGRADE: 'true'
+            _AIRFLOW_DB_MIGRATE: 'true'
             _AIRFLOW_WWW_USER_CREATE: 'true'
             _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
             _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-        networks:
-            default:
-                ipv4_address: 172.20.0.19
+        user: "0:0"
 
     ib-gateway:
         container_name: "ib-gateway"
@@ -238,9 +276,6 @@ services:
             TWSUSERID: ${TWSUSERID}
             TWSPASSWORD: ${TWSPASSWORD}
             TRADING_MODE: ${TRADING_MODE}
-        networks:
-            default:
-                ipv4_address: 172.20.0.20
 
     mt5:
         container_name: "mt5"
@@ -262,36 +297,37 @@ services:
             GID: 1000
             CUSTOM_USER: ${CUSTOM_USER}
             PASSWORD: ${PASSWORD}
-        networks:
-            default:
-                ipv4_address: 172.20.0.21
 
-    superset:
-        container_name: "superset"
+    metabase:
+        container_name: "metabase"
         build:
-            context: ./dockerfile_superset
+            context: ./dockerfile_metabase
         restart: always
-        depends_on:
-            - redis
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:3000/api/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 60s
         environment:
-            MAPBOX_API_KEY: ${MAPBOX_API_KEY}
-            SUPERSET_HOME: /etc/superset
-            SUPERSET_ENV: production
-            SUPERSET_SECRET_KEY: TwGiSenUQ0oUGEQT+E1o6IZzWzNDClPLppLmamPR7DN7DXhqZHdYJuRA
-            TZ: ${TZ}
+           MB_DB_TYPE: postgres
+           MB_DB_DBNAME: metabase
+           MB_DB_PORT: 5432
+           MB_DB_USER: metabase_user
+           MB_DB_PASS: metabase_pass
+           MB_DB_HOST: pg-master
+        
+           # Configuración opcional
+           MB_ENCRYPTION_SECRET_KEY: "your-secret-key-here-change-this"
+           JAVA_TIMEZONE: ${TZ}
+           TZ: ${TZ}
         ports:
-            - "8088:8088"
-        depends_on:
-            - reverseproxy
-        volumes:
-            - ${WD}/superset/:/etc/superset
-            - ${WD}/superset/:/var/lib/superset 
-            - ${ND}:/home/airflow/notebooks  
+            - "3001:3000"
         depends_on:
             - pg-master
-        networks:
-            default:
-                ipv4_address: 172.20.0.23
+        volumes:
+            - ${WD}/metabase/:/metabase-data 
+            - ${ND}:/home/airflow/notebooks
     
 volumes:
     redis-volume:
@@ -302,9 +338,10 @@ volumes:
         external: false
     portainer-volume:
         external: false
+    metabase-volume:  # <-- AÑADE ESTO
+        external: false
 
 networks:
   default:
-    external:
       name: algotrading_stack_default
 

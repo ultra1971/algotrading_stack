@@ -59,7 +59,7 @@ La primera vez que ingreses te va a solicitar crear una password para la cuenta 
 Los diferentes servicios del stack se pueden acceder a traves:
 
     * Airflow:          http://localhost:8080
-    * Superset:         http://localhost:8088
+    * Mwtabase:         http://localhost:3001
     * Celery Flower:    http://localhost:5555
     * PgAdmin:          http://localhost:1234
     * Metatrader        http://localhost:3000 
