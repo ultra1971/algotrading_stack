@@ -9,14 +9,14 @@ x-airflow-common:
         AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@pg-airflow/airflow
         AIRFLOW__CELERY__RESULT_BACKEND: redis://:@redis:6379/0
         AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-        AIRFLOW__CORE__FERNET_KEY: 5Dy0JFMRxClaIrfRjI1rQTj62igThKXvFnkd4SsVtiY=
+        AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
         AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
         AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
         AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
         AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"   # refresca DAGs cada 30s
         AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
         AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
-        AIRFLOW__API_AUTH__JWT_SECRET: "b2b5f3b949859504d1272651e4cfaa9f6eac58fc5d55bc3e7b8b3fdb0ee89183"
+        AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
         AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
         TZ: ${TZ}
     volumes:
