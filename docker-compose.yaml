@@ -6,7 +6,7 @@ x-airflow-common:
         &airflow-common-env
         AIRFLOW__CORE__EXECUTOR: CeleryExecutor
         AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@pg-airflow/airflow
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_AIRFLOW_USER:-airflow}:${PG_AIRFLOW_PASSWORD}@pg-airflow/${PG_AIRFLOW_DB:-airflow}
         AIRFLOW__CELERY__RESULT_BACKEND: redis://:@redis:6379/0
         AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
         AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
@@ -88,12 +88,12 @@ services:
         restart: always
 
     pg-airflow:
-        image: postgres
+        image: postgres:16
         container_name: "pg-airflow"
         environment:
-            POSTGRES_USER: airflow
-            POSTGRES_PASSWORD: airflow
-            POSTGRES_DB: airflow
+            POSTGRES_USER: ${PG_AIRFLOW_USER:-airflow}
+            POSTGRES_PASSWORD: ${PG_AIRFLOW_PASSWORD}
+            POSTGRES_DB: ${PG_AIRFLOW_DB:-airflow}
             TZ: ${TZ}
         ports:
             - 5432:5432
@@ -106,13 +106,13 @@ services:
         restart: unless-stopped
  
     pg-master:
-        image: postgres:13
+        image: postgres:16
         container_name: "pg-master"
         ports:
-            - 5431:5431            
+            - 5431:5431
         environment:
-            SHARED_PASSWORD: password
-            POSTGRES_PASSWORD: posgres349
+            SHARED_PASSWORD: ${PG_MASTER_SHARED_PASSWORD}
+            POSTGRES_PASSWORD: ${PG_MASTER_PASSWORD}
             TZ: ${TZ}
         volumes:
             - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/ 
@@ -127,8 +127,8 @@ services:
         image: dpage/pgadmin4
         container_name: "pg-admin"
         environment:
-            PGADMIN_DEFAULT_EMAIL: "guest@guest.com"
-            PGADMIN_DEFAULT_PASSWORD: "guest"
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
             TZ: ${TZ}
         volumes:
             - ${WD}/pgadmin/:/var/lib/pgadmin 
@@ -271,7 +271,7 @@ services:
             - "5999:5999"
         environment:
             TZ: ${TZ}
-            VNC_PASSWORD: ib
+            VNC_PASSWORD: ${VNC_PASSWORD:-changeme}
             VNC_PORT: 5999
             TWSUSERID: ${TWSUSERID}
             TWSPASSWORD: ${TWSPASSWORD}
@@ -313,12 +313,10 @@ services:
            MB_DB_TYPE: postgres
            MB_DB_DBNAME: metabase
            MB_DB_PORT: 5432
-           MB_DB_USER: metabase_user
-           MB_DB_PASS: metabase_pass
+           MB_DB_USER: ${MB_DB_USER:-metabase_user}
+           MB_DB_PASS: ${MB_DB_PASS}
            MB_DB_HOST: pg-master
-        
-           # Configuración opcional
-           MB_ENCRYPTION_SECRET_KEY: "your-secret-key-here-change-this"
+           MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
            JAVA_TIMEZONE: ${TZ}
            TZ: ${TZ}
         ports:
