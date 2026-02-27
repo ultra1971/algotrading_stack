@@ -4,7 +4,7 @@ matplotlib
 plotly==5.24.1
 kaleido==0.2.1
 seaborn
-riskfolio-lib==4.4.2
+riskfolio-lib
 cvxpy[ecos]
 vectorbt
 backtrader2
