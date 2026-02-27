@@ -2,62 +2,46 @@ FROM jupyter/datascience-notebook:x86_64-python-3.11.6
 
 USER root
 
-RUN apt-get update && apt-get install -y \
-	        python3 \
-	        python3-dev \
-            bash vim \
-	        g++ make wget git curl gcc gnupg2 \
-    && rm -rf /var/lib/apt/lists/
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3-dev \
+        bash vim \
+        g++ make wget git curl gcc gnupg2 \
+    && rm -rf /var/lib/apt/lists/*
 
-#RUN pip install numpy 
-# TA-Lib
-#RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
-#  tar -xvzf ta-lib-0.4.0-src.tar.gz && \
-#  cd ta-lib/ && \
-#  ./configure --prefix=/usr && \
-#  make && \
-#  make install
-#RUN rm -R ta-lib ta-lib-0.4.0-src.tar.gz
+RUN curl -L https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb \
+        -o /tmp/ta-lib.deb \
+    && dpkg -i /tmp/ta-lib.deb \
+    && rm /tmp/ta-lib.deb
 
-RUN curl -L https://github.com/ta-lib/ta-lib/releases/download/v0.6.4/ta-lib_0.6.4_amd64.deb
-RUN dpkg -i ta-lib_0.6.4_amd64.deb
+RUN groupadd -g 1020 airflow \
+    && useradd -s /bin/false -u 1010 -g 1020 airflow
 
-RUN pip3 install numpy \
-  && pip3 install TA-Lib
+COPY requirements.txt /tmp/requirements.txt
 
-COPY requirements.txt /tmp/
-RUN pip install --requirement /tmp/requirements.txt && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER && \
-    apt update && \
-    apt-get install curl -y
+RUN pip install --no-cache-dir \
+        numpy \
+        TA-Lib \
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && fix-permissions $CONDA_DIR \
+    && fix-permissions /home/$NB_USER
 
-ENV PYTHONPATH "${PYTHONPATH}:/home/jovyan/work"
+RUN pip install --no-cache-dir \
+        jupyterlab>=4.0 \
+        jupyterlab-git \
+        jupyterlab-lsp \
+        python-lsp-server[all] \
+        jupyterlab_code_formatter \
+        black \
+        isort \
+        ipywidgets \
+        jupyter-resource-usage \
+        nbformat \
+        nbconvert
 
-RUN python -m pip install --upgrade --no-deps --force-reinstall notebook
+ENV PYTHONPATH="${PYTHONPATH}:/home/jovyan/work"
 
-RUN python -m pip install jupyterthemes
-RUN python -m pip install --upgrade jupyterthemes
-RUN python -m pip install jupyter_contrib_nbextensions
-# RUN jupyter contrib nbextension install --user
-# enable the Nbextensions
-#RUN jupyter nbextension enable contrib_nbextensions_help_item/main
-#RUN jupyter nbextension enable autosavetime/main
-#RUN jupyter nbextension enable codefolding/main
-#RUN jupyter nbextension enable code_font_size/code_font_size
-#RUN jupyter nbextension enable code_prettify/code_prettify
-#RUN jupyter nbextension enable collapsible_headings/main
-#RUN jupyter nbextension enable comment-uncomment/main
-#RUN jupyter nbextension enable equation-numbering/main
-#RUN jupyter nbextension enable execute_time/ExecuteTime 
-#RUN jupyter nbextension enable gist_it/main 
-#RUN jupyter nbextension enable hide_input/main 
-#RUN jupyter nbextension enable spellchecker/main
-#RUN jupyter nbextension enable toc2/main
-#RUN jupyter nbextension enable toggle_all_line_numbers/main
-
-CMD ["jupyter", "notebook", "--no-browser","--NotebookApp.token=''","--NotebookApp.password=''", "--allow-root"]
-
-RUN sudo groupadd -g 1020 airflow
-RUN sudo useradd -s /bin/false -u 1010 -g 1020 airflow
-
+USER $NB_UID
+CMD ["jupyter", "lab", \
+     "--no-browser", \
+     "--NotebookApp.token=''", \
+     "--NotebookApp.password=''"]

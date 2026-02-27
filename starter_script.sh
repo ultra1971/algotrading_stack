@@ -1,28 +1,19 @@
-echo "create folders needed"
-mkdir ./airflow
-mkdir ./airflow/dags
-mkdir ./airflow/logs
-mkdir ./airflow/plugins
-mkdir ./mlflow
-mkdir ./notebooks
-mkdir ./pgadmin
-mkdir ./postgress_db
-mkdir ./superset
+#!/bin/bash
+set -e
 
-echo "build algotrading image"
+echo "Creating required directories..."
+mkdir -p ./airflow/dags
+mkdir -p ./airflow/logs
+mkdir -p ./airflow/plugins
+mkdir -p ./notebooks
+mkdir -p ./pgadmin
+mkdir -p ./postgress_db
+mkdir -p ./metabase
+
+echo "Building algotrading images..."
 docker-compose build
 
-echo "run algotrading image"
+echo "Starting algotrading stack..."
 docker-compose up -d
 
-echo "scripts on superset"
-docker exec -it superset superset fab create-admin \
-               --username admin \
-               --firstname Superset \
-               --lastname Admin \
-               --email admin@superset.com \
-               --password admin
-docker exec -it superset superset db upgrade
-docker exec -it superset superset init
-docker exec -it superset superset load_examples
-
+echo "Stack is up. Check service status with: docker-compose ps"

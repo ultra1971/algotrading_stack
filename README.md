@@ -1,93 +1,115 @@
 # Algotrading Stack
 
+Containerized infrastructure for developing and deploying algorithmic trading strategies using Docker.
 
-## Comenzando 🚀
+Infraestructura contenerizada para desarrollar y poner en produccion estrategias de trading algoritmico usando Docker.
 
-Uno de las actividades recurrentes es armar un maquina que disponga de todos los servicios necesarios para empezar a desarrollar o poner en produccion estrategias de algotrading, el objetivo de este proyecto es proveer toda la infraestructura necesaria sin necesidad de instalar software o componentes locales sino a traves de un entorno contenerizado y virtualizado con la tecnologia provista por docker.
+---
 
-### Pre-requisitos 📋
+## Prerequisites / Pre-requisitos
 
-Solo tienes que tenes instalado docker en una maquina (linux, obvio)
+- Docker and Docker Compose installed on a Linux machine.
+- Docker y Docker Compose instalados en una maquina Linux.
 
-Aqui encontraras una guia para instalar docker en Ubuntu 20.04
-https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-es
+Installation guides / Guias de instalacion:
+- [Docker on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [Docker on Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
 
-Si insistes con Windows, quizas esta guia te pueda ayudar
-https://www.simplilearn.com/tutorials/docker-tutorial/install-docker-on-windows
+## Quick Start / Inicio Rapido
 
-Luego toda la instalación esta armada con un stack completo e integrado de docker, que utiliza partir de utilizar comando docker-compose arma todo el stack de microservicios
+1. Clone this repository / Clonar este repositorio:
+   ```bash
+   git clone <repo-url> algotrading
+   cd algotrading
+   ```
 
-### Instalación 🔧
+2. Create and configure your environment file / Crear y configurar el archivo de entorno:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your values / Editar .env con tus valores
+   ```
 
-La instalación es muy sencilla, veamos...
+3. Run the starter script / Ejecutar el script de inicio:
+   ```bash
+   chmod +x starter_script.sh
+   ./starter_script.sh
+   ```
 
-1) Copiar todo el contenido en una carpeta, ejemplo 'algotrading'
+## Environment Variables / Variables de Entorno
 
-2) Edita las variables del archivo .env, ya que se uilizan en el archivo docker-compose.yaml para configurar los servicios de los contenedores
+See `.env.example` for all available variables with descriptions.
+Consultar `.env.example` para ver todas las variables disponibles con sus descripciones.
 
-    WD="directorio de trabajo, donde reside esta misma carpeta, en el ejemplo seria la ruta completa de 'algotrading'"
-    
-    ND="directorio donde se alojaron los notebooks y demas archivos python que seran accesibles desde los contenedores"
+Key variables / Variables principales:
 
-    TWSUSERID="usuario del gateway de Interactive Brokers"
-    
-    TWSPASSWORD="password del gateway de Interactive Brokers"
-    
-    TRADING_MODE="modalidad del gateway de Interactive Brokers paper o live"
+| Variable | Description / Descripcion |
+|---|---|
+| `WD` | Working directory where this project resides / Directorio de trabajo donde reside el proyecto |
+| `ND` | Notebooks directory accessible from containers / Directorio de notebooks accesible desde los contenedores |
+| `TZ` | Timezone (e.g. `America/New_York`) / Zona horaria |
+| `TWSUSERID` | Interactive Brokers Gateway username / Usuario del Gateway de IB |
+| `TWSPASSWORD` | Interactive Brokers Gateway password / Password del Gateway de IB |
+| `TRADING_MODE` | IB trading mode: `paper` or `live` / Modo de trading de IB |
 
-    TZ="timezone del gateway de Interactive Brokers"
+## Services / Servicios
 
-    CUSTOM_USER="usuario de Metatrader Web"
+| Service / Servicio | URL | Description / Descripcion |
+|---|---|---|
+| Portainer | http://localhost:9000 | Container management UI / UI de gestion de contenedores |
+| Airflow | http://localhost:8080 | Workflow orchestration / Orquestacion de workflows |
+| Metabase | http://localhost:3001 | Business Intelligence dashboards / Dashboards de BI |
+| Celery Flower | http://localhost:5555 | Celery task monitoring / Monitoreo de tareas Celery |
+| pgAdmin | http://localhost:1234 | PostgreSQL administration / Administracion de PostgreSQL |
+| MetaTrader 5 | http://localhost:3000 | MT5 web terminal (mt5linux on port 8001) / Terminal web MT5 |
+| IB Gateway | vnc://localhost:5999 | Interactive Brokers Gateway via VNC |
 
-    PASSWORD="password de Metatrader Web, si se deja en blanco entonces no se pedira autenticacion"
+## Architecture / Arquitectura
 
-3) Debes crear la network algotrading_stack_default en docker con la subnet correspondiente para asignar las IPs correspondientes a cada servicio
+The stack is composed of the following containerized services:
 
-4) Ejecutar el script
-./starter_script.sh
+El stack esta compuesto por los siguientes servicios contenerizados:
 
-### Gestión de los contenedores 🔩
+- **Apache Airflow** (API Server, Scheduler, DAG Processor, Triggerer, Worker, Flower) - Workflow orchestration / Orquestacion de workflows
+- **PostgreSQL** (x2) - Airflow metadata DB + Master data warehouse / BD metadata de Airflow + Data warehouse principal
+- **Redis** - Celery message broker
+- **Metabase** - Business Intelligence platform / Plataforma de BI
+- **Interactive Brokers Gateway** - IB API access / Acceso API de IB
+- **MetaTrader 5** - MT5 trading platform / Plataforma de trading MT5
+- **pgAdmin** - PostgreSQL web administration / Administracion web de PostgreSQL
+- **Portainer** - Docker container management / Gestion de contenedores Docker
+- **Nginx Reverse Proxy** - HTTP routing / Enrutamiento HTTP
 
-Para ver el status y administrar los contenedores puedes usar el comando docker-compose o tambien la interfaz web provista por Portainer:
+## Python Libraries / Librerias Python
 
-    * Portainer:        http://localhost:9000
+The `requirements.txt` files in `dockerfile_airflow/` and `dockerfile_jupyter_notebook/` include libraries for:
 
-La primera vez que ingreses te va a solicitar crear una password para la cuenta admin, y luego tendras acceso a la gestión y administracion de los contenedores, acceder a las consolas de los mismos, monitorear recursos y status de los servicios.
+Los archivos `requirements.txt` en `dockerfile_airflow/` y `dockerfile_jupyter_notebook/` incluyen librerias para:
 
-### Servicios incluidos ⌨️
+- **Data & ML**: pandas, numpy, scikit-learn, xgboost, lightgbm, statsmodels, shap
+- **Backtesting**: backtrader2, vectorbt
+- **Risk & Portfolio**: riskfolio-lib, quantstats, ffn, pyfolio
+- **Broker APIs**: ib_insync, mt5linux, ccxt
+- **Market Data**: yfinance, pandas_datareader, pandas_market_calendars
+- **Visualization**: matplotlib, plotly, seaborn, mplfinance
 
-Los diferentes servicios del stack se pueden acceder a traves:
+## Container Management / Gestion de Contenedores
 
-    * Airflow:          http://localhost:8080
-    * Mwtabase:         http://localhost:3001
-    * Celery Flower:    http://localhost:5555
-    * PgAdmin:          http://localhost:1234
-    * Metatrader        http://localhost:3000 
-                        mt5linux via host localhost port 8001
-    * IBGateway         via vnc localhost:5999
+```bash
+# Check status / Ver estado
+docker-compose ps
 
-## Paquetes y librerias 📦
+# View logs / Ver logs
+docker-compose logs -f <service-name>
 
-En los archivos requirements.txt encontraras las librerias que se han incluido, he incluido entre otras:
+# Stop all / Detener todo
+docker-compose down
 
-    * sklearn
-    * xgboost
-    * ib_insync
-    * backtrader2 (fork de backtrader con bugfixes)
-    * vectorbt
-    * ffn
-    * pyfolio
-    * quantstats
-    * riskfolio-lib
-    * mt5linux
+# Rebuild and restart / Reconstruir y reiniciar
+docker-compose up -d --build
+```
 
-## Agradecimientos 📢
+## Acknowledgements / Agradecimientos
 
-* A @paduel por la inspiración y el empujoncito en armar este stack 🤓
-* Basado en las ideas y en el trabajo de @saeed349 
-https://github.com/saeed349/Microservices-Based-Algorithmic-Trading-System
-* Para Metatrader he integrado la imagen desarrollada por @gmag11
-https://github.com/gmag11/MetaTrader5-Docker-Image
-
-
-
+- [@paduel](https://github.com/paduel) - Inspiration and initial push / Inspiracion y empujon inicial
+- [@saeed349](https://github.com/saeed349) - [Microservices-Based Algorithmic Trading System](https://github.com/saeed349/Microservices-Based-Algorithmic-Trading-System)
+- [@gmag11](https://github.com/gmag11) - [MetaTrader5 Docker Image](https://github.com/gmag11/MetaTrader5-Docker-Image)
