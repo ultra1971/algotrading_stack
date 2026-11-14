@@ -1,3 +1,10 @@
+x-logging:
+    &default-logging
+    driver: json-file
+    options:
+        max-size: "10m"
+        max-file: "3"
+
 x-airflow-common:
     &airflow-common
     build:
@@ -6,15 +13,17 @@ x-airflow-common:
         &airflow-common-env
         AIRFLOW__CORE__EXECUTOR: CeleryExecutor
         AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_AIRFLOW_USER:-airflow}:${PG_AIRFLOW_PASSWORD}@pg-airflow/${PG_AIRFLOW_DB:-airflow}
-        AIRFLOW__CELERY__RESULT_BACKEND: redis://:@redis:6379/0
-        AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${PG_AIRFLOW_USER:-airflow}:${PG_AIRFLOW_PASSWORD:?PG_AIRFLOW_PASSWORD must be set in .env}@pg-airflow/${PG_AIRFLOW_DB:-airflow}
+        AIRFLOW__CELERY__RESULT_BACKEND: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}@redis:6379/0
+        AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
         AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
         AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
         AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+        AIRFLOW__CORE__DEFAULT_TIMEZONE: ${TZ}
         AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
         AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"   # refresca DAGs cada 30s
         AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+        AIRFLOW__API__BASE_URL: ${AIRFLOW_BASE_URL:-http://localhost:8080}
         AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
         AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
         AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
@@ -25,8 +34,8 @@ x-airflow-common:
         - ${WD}/airflow/plugins:/opt/airflow/plugins
         - ${WD}/airflow/include:/opt/airflow/include
         - ${ND}:/home/airflow/notebooks
-        - /home/algotrading:/home/airflow/algotrading
     user: "${AIRFLOW_UID:-50000}:0"
+    logging: *default-logging
     depends_on:
         &airflow-common-depends-on
         redis:
@@ -40,35 +49,36 @@ services:
         image: portainer/portainer-ce:latest
         command: -H unix:///var/run/docker.sock
         restart: always
+        # Docker socket = root on the host: never publish it on the LAN.
         ports:
-            - 9000:9000
-            - 8000:8000
+            - ${PRIVATE_BIND_ADDR:-127.0.0.1}:9000:9000
+            - ${PRIVATE_BIND_ADDR:-127.0.0.1}:8000:8000
         environment:
             TZ: ${TZ}
-        #healthcheck:
-        #    test: ["CMD", "curl", "--fail", "http://localhost:9000/api/status"]
-        #    interval: 60s
-        #    timeout: 5s
-        #    retries: 3
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - portainer-volume:/data
+        mem_limit: 256m
+        logging: *default-logging
 
     redis:
         image: redis
         container_name: "redis"
+        # Only reachable inside the Docker network, and password protected.
+        command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
         volumes:
             - redis-volume:/data
-        ports:
-            - 6379:6379
         environment:
             TZ: ${TZ}
+            REDISCLI_AUTH: ${REDIS_PASSWORD}
         healthcheck:
             test: ["CMD", "redis-cli", "ping"]
             interval: 60s
             timeout: 30s
             retries: 10
         restart: always
+        mem_limit: 512m
+        logging: *default-logging
 
     reverseproxy:
         container_name: "reverseproxy"
@@ -84,8 +94,11 @@ services:
         environment:
             TZ: ${TZ}
         volumes:
-            - ${ND}:/etc/nginx/html/
+            # Only the published reports, never the whole notebooks folder (.env files...).
+            - ${ND}/CEREBRO/OUTPUT:/etc/nginx/html/CEREBRO/OUTPUT:ro
         restart: always
+        mem_limit: 128m
+        logging: *default-logging
 
     pg-airflow:
         image: postgres:16
@@ -100,48 +113,54 @@ services:
         volumes:
             - pg-airflow-volume:/var/lib/postgresql/data
         healthcheck:
-            test: ["CMD", "pg_isready", "-U", "airflow"]
+            test: ["CMD", "pg_isready", "-U", "${PG_AIRFLOW_USER:-airflow}", "-d", "${PG_AIRFLOW_DB:-airflow}"]
             interval: 5s
             retries: 5
         restart: unless-stopped
- 
+        mem_limit: 1g
+        logging: *default-logging
+
     pg-master:
         image: postgres:16
         container_name: "pg-master"
         ports:
-            - 5431:5431
+            # Postgres listens on 5432 inside the container.
+            - 5431:5432
         environment:
             SHARED_PASSWORD: ${PG_MASTER_SHARED_PASSWORD}
-            POSTGRES_PASSWORD: ${PG_MASTER_PASSWORD}
+            POSTGRES_PASSWORD: ${PG_MASTER_PASSWORD:?PG_MASTER_PASSWORD must be set in .env}
             TZ: ${TZ}
         volumes:
-            - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/ 
+            - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/
             - pg-master-volume:/var/lib/postgresql/data
         healthcheck:
           test: ["CMD", "pg_isready", "-U", "postgres"]
           interval: 5s
           retries: 5
         restart: always
+        mem_limit: 2g
+        logging: *default-logging
 
     pgadmin:
         image: dpage/pgadmin4
         container_name: "pg-admin"
         environment:
-            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
-            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?PGADMIN_EMAIL must be set in .env}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD must be set in .env}
             TZ: ${TZ}
         volumes:
-            - ${WD}/pgadmin/:/var/lib/pgadmin 
+            - ${WD}/pgadmin/:/var/lib/pgadmin
         ports:
             - 1234:80
         depends_on:
-            - reverseproxy
             - pg-master
-        
+        mem_limit: 512m
+        logging: *default-logging
+
     airflow-apiserver:
         <<: *airflow-common
         container_name: "airflow-apiserver"
-        command: api-server --apps all 
+        command: api-server --apps all
         ports:
             - 8080:8080
         healthcheck:
@@ -150,11 +169,12 @@ services:
             timeout: 10s
             retries: 5
         restart: always
+        mem_limit: 1536m
         depends_on:
             <<: *airflow-common-depends-on
             airflow-init:
               condition: service_completed_successfully
-       
+
     airflow-scheduler:
         <<: *airflow-common
         container_name: "airflow-scheduler"
@@ -165,8 +185,8 @@ services:
           timeout: 10s
           retries: 5
           start_period: 30s
-
         restart: always
+        mem_limit: 1536m
         depends_on:
            <<: *airflow-common-depends-on
            airflow-init:
@@ -183,11 +203,12 @@ services:
           retries: 5
           start_period: 30s
         restart: always
+        mem_limit: 2g
         depends_on:
           <<: *airflow-common-depends-on
           airflow-init:
             condition: service_completed_successfully
-     
+
     airflow-triggerer:
         <<: *airflow-common
         container_name: "airflow-triggerer"
@@ -199,6 +220,11 @@ services:
           retries: 5
           start_period: 30s
         restart: always
+        mem_limit: 768m
+        depends_on:
+          <<: *airflow-common-depends-on
+          airflow-init:
+            condition: service_completed_successfully
 
     airflow-cli:
         <<: *airflow-common
@@ -219,11 +245,26 @@ services:
         <<: *airflow-common
         container_name: "airflow-worker"
         command: celery worker
+        healthcheck:
+          test:
+            - "CMD-SHELL"
+            - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+          interval: 30s
+          timeout: 10s
+          retries: 5
+          start_period: 30s
         restart: always
         environment:
             <<: *airflow-common-env
+            # Lets the worker finish running tasks on a graceful shutdown.
+            DUMB_INIT_SETSID: "0"
+        # Backtests and ML training run here: cap them so they cannot starve MT5 / IB.
+        mem_limit: 7g
+        cpus: 5
         depends_on:
             <<: *airflow-common-depends-on
+            airflow-init:
+              condition: service_completed_successfully
 
     airflow-flower:
         <<: *airflow-common
@@ -237,6 +278,7 @@ services:
           timeout: 30s
           retries: 5
         restart: always
+        mem_limit: 512m
 
     airflow-init:
         <<: *airflow-common
@@ -257,7 +299,7 @@ services:
             _AIRFLOW_DB_MIGRATE: 'true'
             _AIRFLOW_WWW_USER_CREATE: 'true'
             _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-            _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+            _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:?_AIRFLOW_WWW_USER_PASSWORD must be set in .env}
         user: "0:0"
 
     ib-gateway:
@@ -265,17 +307,20 @@ services:
         build:
             context: ./ibgateway
         restart: always
+        # Airflow reaches the API as ib-gateway:4001 over the Docker network. socat makes
+        # every API client look like 127.0.0.1 (a trusted IP), so never publish it on the LAN.
         ports:
-            - "7497:7497"
-            - "4001:4001"
-            - "5999:5999"
+            - "${PRIVATE_BIND_ADDR:-127.0.0.1}:4001:4001"
+            - "${PRIVATE_BIND_ADDR:-127.0.0.1}:5999:5999"
         environment:
             TZ: ${TZ}
-            VNC_PASSWORD: ${VNC_PASSWORD:-changeme}
+            VNC_PASSWORD: ${VNC_PASSWORD:?VNC_PASSWORD must be set in .env}
             VNC_PORT: 5999
             TWSUSERID: ${TWSUSERID}
             TWSPASSWORD: ${TWSPASSWORD}
             TRADING_MODE: ${TRADING_MODE}
+        mem_limit: 2g
+        logging: *default-logging
 
     mt5:
         container_name: "mt5"
@@ -285,18 +330,21 @@ services:
         volumes:
           - ${WD}/config/:/config
         healthcheck:
-            test: ["CMD", "curl", "--fail", "http://localhost:3000"]
+            test: ["CMD", "curl", "--fail", "-u", "${CUSTOM_USER}:${MT5_WEB_PASSWORD}", "http://localhost:3000"]
             interval: 30s
             timeout: 30s
             retries: 5
+        # 8001 is mt5linux (RPyC = remote code execution): Airflow uses mt5:8001 internally.
         ports:
-          - "3000:3000"
-          - "8001:8001"
+          - "${PRIVATE_BIND_ADDR:-127.0.0.1}:3000:3000"
+          - "${PRIVATE_BIND_ADDR:-127.0.0.1}:8001:8001"
         environment:
             UID: 1000
             GID: 1000
             CUSTOM_USER: ${CUSTOM_USER}
-            PASSWORD: ${PASSWORD}
+            PASSWORD: ${MT5_WEB_PASSWORD:?MT5_WEB_PASSWORD must be set in .env}
+        mem_limit: 3g
+        logging: *default-logging
 
     metabase:
         container_name: "metabase"
@@ -314,9 +362,9 @@ services:
            MB_DB_DBNAME: metabase
            MB_DB_PORT: 5432
            MB_DB_USER: ${MB_DB_USER:-metabase_user}
-           MB_DB_PASS: ${MB_DB_PASS}
+           MB_DB_PASS: ${MB_DB_PASS:?MB_DB_PASS must be set in .env}
            MB_DB_HOST: pg-master
-           MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+           MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY:?MB_ENCRYPTION_SECRET_KEY must be set in .env}
            JAVA_TIMEZONE: ${TZ}
            TZ: ${TZ}
         ports:
@@ -324,9 +372,10 @@ services:
         depends_on:
             - pg-master
         volumes:
-            - ${WD}/metabase/:/metabase-data 
-            - ${ND}:/home/airflow/notebooks
-    
+            - ${WD}/metabase/:/metabase-data
+        mem_limit: 2g
+        logging: *default-logging
+
 volumes:
     redis-volume:
         external: false
@@ -336,10 +385,7 @@ volumes:
         external: false
     portainer-volume:
         external: false
-    metabase-volume:  # <-- AÑADE ESTO
-        external: false
 
 networks:
   default:
       name: algotrading_stack_default
-

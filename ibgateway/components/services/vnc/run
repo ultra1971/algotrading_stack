@@ -18,5 +18,9 @@ function log(){
 }
 
 echo "Starting VNC server to allow remote access to an existing X session" | info
-mkdir /.vnc && x11vnc -storepasswd "${VNC_PASSWORD}" /.vnc/passwd 2>&1 | info
+if [[ -z "${VNC_PASSWORD}" ]]; then
+    echo "VNC_PASSWORD is not set, refusing to start an unprotected VNC server" | err
+    exit 1
+fi
+mkdir -p /.vnc && x11vnc -storepasswd "${VNC_PASSWORD}" /.vnc/passwd 2>&1 | info
 exec /usr/bin/x11vnc -forever -geometry 1980x1020 -rfbport ${VNC_PORT} -rfbauth /.vnc/passwd -display ${DISPLAY} 2>&1 | info

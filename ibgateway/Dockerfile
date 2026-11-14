@@ -23,8 +23,8 @@ RUN install_clean \
         x11vnc \
  && echo "source /etc/profile" >> /root/.bashrc
 
-ENV VNC_PASSWORD=123456 \
-    VNC_PORT=5900
+# VNC_PASSWORD has no default on purpose: it must come from the compose/.env.
+ENV VNC_PORT=5900
 COPY components/services/xvfb /etc/service/00_xvfb
 COPY components/services/vnc /etc/service/01_vnc
 COPY components/services/ibc /etc/service/02_ibc

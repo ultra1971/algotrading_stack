@@ -41,7 +41,5 @@ RUN pip install --no-cache-dir \
 ENV PYTHONPATH="${PYTHONPATH}:/home/jovyan/work"
 
 USER $NB_UID
-CMD ["jupyter", "lab", \
-     "--no-browser", \
-     "--NotebookApp.token=''", \
-     "--NotebookApp.password=''"]
+# Keep the base image's start command: Jupyter requires a token (set JUPYTER_TOKEN, or
+# read the generated one from `docker logs`). An empty token means no authentication.

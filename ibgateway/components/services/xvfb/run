@@ -18,5 +18,4 @@ function log(){
 }
 
 echo "Starting Xvfb - Virtual Framebuffer 'fake' X server" | info
-echo -e "$(env)" | debug
 exec /usr/bin/Xvfb $DISPLAY -ac -screen 0 1980x1020x24 +extension RANDR 2>&1 | info

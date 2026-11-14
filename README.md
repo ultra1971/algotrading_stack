@@ -61,7 +61,16 @@ Key variables / Variables principales:
 | Celery Flower | http://localhost:5555 | Celery task monitoring / Monitoreo de tareas Celery |
 | pgAdmin | http://localhost:1234 | PostgreSQL administration / Administracion de PostgreSQL |
 | MetaTrader 5 | http://localhost:3000 | MT5 web terminal (mt5linux on port 8001) / Terminal web MT5 |
-| IB Gateway | vnc://localhost:5999 | Interactive Brokers Gateway via VNC |
+| IB Gateway | vnc://localhost:5999 | Interactive Brokers Gateway via VNC (API on 4001) |
+
+Portainer, MetaTrader 5 (3000/8001) and IB Gateway (4001/5999) are published only on
+`PRIVATE_BIND_ADDR` (default `127.0.0.1`). From another machine use an SSH tunnel, e.g.
+`ssh -L 3000:localhost:3000 -L 5999:localhost:5999 user@host`. Containers reach them over the
+Docker network as `mt5:8001` and `ib-gateway:4001`. Redis is not published at all.
+
+Portainer, MetaTrader 5 (3000/8001) e IB Gateway (4001/5999) solo se publican en
+`PRIVATE_BIND_ADDR` (por defecto `127.0.0.1`). Desde otra maquina usar un tunel SSH. Los
+contenedores los alcanzan por la red de Docker como `mt5:8001` e `ib-gateway:4001`.
 
 ## Architecture / Arquitectura
 
@@ -96,16 +105,16 @@ Los archivos `requirements.txt` en `dockerfile_airflow/` y `dockerfile_jupyter_n
 
 ```bash
 # Check status / Ver estado
-docker-compose ps
+docker compose ps
 
 # View logs / Ver logs
-docker-compose logs -f <service-name>
+docker compose logs -f <service-name>
 
 # Stop all / Detener todo
-docker-compose down
+docker compose down
 
 # Rebuild and restart / Reconstruir y reiniciar
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Acknowledgements / Agradecimientos

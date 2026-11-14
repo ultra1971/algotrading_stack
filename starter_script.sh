@@ -11,9 +11,9 @@ mkdir -p ./postgress_db
 mkdir -p ./metabase
 
 echo "Building algotrading images..."
-docker-compose build
+docker compose build
 
 echo "Starting algotrading stack..."
-docker-compose up -d
+docker compose up -d
 
-echo "Stack is up. Check service status with: docker-compose ps"
+echo "Stack is up. Check service status with: docker compose ps"

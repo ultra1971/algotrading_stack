@@ -27,10 +27,11 @@ RUN apt-get update && apt-get install -y \
 
 # Add WineHQ repository key and APT source
 # && add-apt-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main' \
-RUN wget -q https://dl.winehq.org/wine-builds/winehq.key \
-    && apt-key add winehq.key \
-    && add-apt-repository 'deb https://dl.winehq.org/wine-builds/debian/ bookworm main' \
-    && rm winehq.key
+# apt-key is deprecated: pin the WineHQ key to its own repository with signed-by.
+RUN mkdir -p /etc/apt/keyrings \
+    && wget -qO- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key \
+    && echo "deb [arch=amd64,i386 signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/debian/ bookworm main" \
+        > /etc/apt/sources.list.d/winehq.list
 
 # Add i386 architecture and update package lists
 RUN dpkg --add-architecture i386 \
