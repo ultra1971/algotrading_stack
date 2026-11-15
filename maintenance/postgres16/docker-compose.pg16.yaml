@@ -1,0 +1,16 @@
+# Override used ONLY by maintenance/upgrade-postgres-16.sh: same services, Postgres 16 and
+# NEW empty volumes. The Postgres 13 volumes (pg-airflow-volume, pg-master-volume) are left
+# untouched, so going back is just `docker compose up -d` with the normal compose file.
+services:
+    pg-airflow:
+        image: postgres:16
+        volumes:
+            - pg16-airflow-volume:/var/lib/postgresql/data
+    pg-master:
+        image: postgres:16
+        volumes:
+            - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/
+            - pg16-master-volume:/var/lib/postgresql/data
+volumes:
+    pg16-airflow-volume:
+    pg16-master-volume:

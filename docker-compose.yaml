@@ -7,6 +7,8 @@ x-logging:
 
 x-airflow-common:
     &airflow-common
+    # One image shared by every Airflow service (otherwise compose builds one copy each).
+    image: algotrading-airflow:3.1.5
     build:
         context: ./dockerfile_airflow
     environment:
@@ -27,12 +29,16 @@ x-airflow-common:
         AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
         AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
         AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+        # Numba (vectorbt) JIT cache on the host, so recreating the worker does not force a
+        # recompilation of every function (the image default is /tmp).
+        NUMBA_CACHE_DIR: /opt/airflow/numba-cache
         TZ: ${TZ}
     volumes:
         - ${WD}/airflow/dags:/opt/airflow/dags
         - ${WD}/airflow/logs:/opt/airflow/logs
         - ${WD}/airflow/plugins:/opt/airflow/plugins
         - ${WD}/airflow/include:/opt/airflow/include
+        - ${WD}/airflow/numba-cache:/opt/airflow/numba-cache
         - ${ND}:/home/airflow/notebooks
     user: "${AIRFLOW_UID:-50000}:0"
     logging: *default-logging
@@ -101,6 +107,8 @@ services:
         logging: *default-logging
 
     pg-airflow:
+        # The data volume was initialized by PostgreSQL 13: a major upgrade needs pg_upgrade or
+        # dump/restore, so keep the major version pinned.
         image: postgres:16
         container_name: "pg-airflow"
         environment:
@@ -111,7 +119,7 @@ services:
         ports:
             - 5432:5432
         volumes:
-            - pg-airflow-volume:/var/lib/postgresql/data
+            - pg16-airflow-volume:/var/lib/postgresql/data
         healthcheck:
             test: ["CMD", "pg_isready", "-U", "${PG_AIRFLOW_USER:-airflow}", "-d", "${PG_AIRFLOW_DB:-airflow}"]
             interval: 5s
@@ -121,6 +129,8 @@ services:
         logging: *default-logging
 
     pg-master:
+        # The data volume was initialized by PostgreSQL 13: a major upgrade needs pg_upgrade or
+        # dump/restore, so keep the major version pinned.
         image: postgres:16
         container_name: "pg-master"
         ports:
@@ -132,7 +142,7 @@ services:
             TZ: ${TZ}
         volumes:
             - ${WD}/postgress_db/scripts/:/docker-entrypoint-initdb.d/
-            - pg-master-volume:/var/lib/postgresql/data
+            - pg16-master-volume:/var/lib/postgresql/data
         healthcheck:
           test: ["CMD", "pg_isready", "-U", "postgres"]
           interval: 5s
@@ -258,9 +268,10 @@ services:
             <<: *airflow-common-env
             # Lets the worker finish running tasks on a graceful shutdown.
             DUMB_INIT_SETSID: "0"
-        # Backtests and ML training run here: cap them so they cannot starve MT5 / IB.
+        # Backtests and ML training run here: cap them so they cannot starve MT5 / IB, but leave
+        # room for Backtesting's parallel jobs (8 host cores, 1 kept for MT5 / IB / Postgres).
         mem_limit: 7g
-        cpus: 5
+        cpus: 7
         depends_on:
             <<: *airflow-common-depends-on
             airflow-init:
@@ -379,13 +390,15 @@ services:
 volumes:
     redis-volume:
         external: false
-    pg-master-volume:
+    pg16-master-volume:
         external: false
-    pg-airflow-volume:
+    pg16-airflow-volume:
         external: false
     portainer-volume:
         external: false
 
 networks:
   default:
+      # Pre-existing network (created by an older compose with other labels): reuse it as is.
       name: algotrading_stack_default
+      external: true

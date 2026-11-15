@@ -129,12 +129,15 @@ fi
 show_message "[7/7] Starting the mt5linux server..."
 python3 -m mt5linux --host 0.0.0.0 -p $mt5server_port -w $wine_executable python.exe &
 
-# Give the server some time to start
-sleep 5
-
-# Check if the server is running
-if ss -tuln | grep ":$mt5server_port" > /dev/null; then
-    show_message "[7/7] The mt5linux server is running on port $mt5server_port."
-else
-    show_message "[7/7] Failed to start the mt5linux server on port $mt5server_port."
+# Python under Wine takes a while to start: wait up to 2 minutes for the port to open.
+mt5server_wait=120
+for ((i = 0; i < mt5server_wait; i += 5)); do
+    if (exec 3<>"/dev/tcp/127.0.0.1/$mt5server_port") 2>/dev/null; then
+        show_message "[7/7] The mt5linux server is running on port $mt5server_port (after ${i}s)."
+        break
+    fi
+    sleep 5
+done
+if (( i >= mt5server_wait )); then
+    show_message "[7/7] The mt5linux server is not listening on port $mt5server_port after ${mt5server_wait}s."
 fi

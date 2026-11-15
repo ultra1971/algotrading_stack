@@ -17,5 +17,20 @@ function log(){
     logger -p syslog.${_severity} -t ${service_name} -- "${data}"
 }
 
-echo "Starting Interactive Brokers Controller" | info
+# The Gateway comes from IB's unpinned "stable" installer, so its version changes between
+# builds: use whatever version is actually installed instead of a hardcoded one.
+TWS_MAJOR_VRSN="$(ls "${TWS_PATH}/ibgateway" 2>/dev/null | grep -E '^[0-9]+$' | sort -n | tail -1)"
+if [[ -z "${TWS_MAJOR_VRSN}" ]]; then
+    echo "No IB Gateway installation found under ${TWS_PATH}/ibgateway" | err
+    exit 1
+fi
+export TWS_MAJOR_VRSN
+
+# The installer bundles its own JRE (with JavaFX) inside the Gateway folder: IBC needs the
+# folder that contains the java binary.
+if [[ -z "${JAVA_PATH}" && -x "${TWS_PATH}/ibgateway/${TWS_MAJOR_VRSN}/jre/bin/java" ]]; then
+    export JAVA_PATH="${TWS_PATH}/ibgateway/${TWS_MAJOR_VRSN}/jre/bin"
+fi
+
+echo "Starting Interactive Brokers Controller for Gateway ${TWS_MAJOR_VRSN}" | info
 exec /opt/IBC/scripts/displaybannerandlaunch.sh 2>&1 | info

@@ -4,6 +4,9 @@ FROM  ghcr.io/linuxserver/baseimage-kasmvnc:amd64-debianbookworm
 # set version label
 ARG BUILD_DATE
 ARG VERSION
+# A new Wine version upgrades the /config/.wine prefix on the next start and blocks it on a
+# GUI dialog (Wine Mono), so pin the version that is known to work with this prefix.
+ARG WINE_VERSION=11.0.0.0~bookworm-1
 LABEL build_version="Metatrader Docker:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="gmartin"
 
@@ -39,7 +42,11 @@ RUN dpkg --add-architecture i386 \
 
 # Install WineHQ stable package and dependencies
 RUN apt-get install --install-recommends -y \
-    winehq-stable winetricks \
+    winehq-stable=${WINE_VERSION} \
+    wine-stable=${WINE_VERSION} \
+    wine-stable-amd64=${WINE_VERSION} \
+    wine-stable-i386=${WINE_VERSION} \
+    winetricks \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

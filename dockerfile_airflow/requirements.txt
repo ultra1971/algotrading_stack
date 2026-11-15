@@ -16,14 +16,14 @@ TA_Lib
 humanize
 websocket
 tables
-git+https://github.com/ultra1971/mt5linux.git 
+mt5linux @ git+https://github.com/ultra1971/mt5linux.git@7e46633dc029e51bc99bd66338e707dea73883ef
 psycopg2-binary
 scikit-learn
 lightgbm
 xgboost
 ib_insync
 bs4
-peewee
+peewee<4  # 4.x: commit() raises "no transaction is active" in CEREBRO (sqlite autocommit)
 adjustText
 xlrd
 ffn
@@ -48,3 +48,4 @@ chart-studio
 metastock2pd
 mplfinance
 rich
+pytest==9.2.0
